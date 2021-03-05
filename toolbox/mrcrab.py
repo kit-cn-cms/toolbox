@@ -68,6 +68,7 @@ class CrabResult:
             sys.exit()
 
         self.njobs = -1
+        self.detected_groups = {}
 
     def query(self):
         # build crab command
@@ -125,8 +126,6 @@ class CrabResult:
         return True
 
     def collect_groups(self):
-        self.detected_groups = {}
-        
         # loop over all groups
         for group in self.groups+self.pubgroups:
             # get name of group
@@ -336,6 +335,8 @@ def print_crab_summary(results):
     # print total summary
     output_lines.append("-"*101+"|")
     summaryStatus = ["TOTAL", printyellow("")]
+    percentStatus = ["", printyellow("")]
+    total = -1
     # loop over entries
     for entry in ["totaljobs"]+allGroups:
         totalsum = 0
@@ -343,7 +344,16 @@ def print_crab_summary(results):
         for res in results: 
             totalsum += res.get_njobs(entry)
         summaryStatus.append(printcolor(totalsum,entry))
+        
+        # calculate percentages
+        if entry == "totaljobs":
+            percentStatus.append(printcolor("",entry))
+            total = totalsum
+        else:
+            percentage = float(totalsum)/float(total)*100
+            percentStatus.append(printcolor("{:.2f} %".format(percentage), entry))
     # add summary line
     output_lines.append(template.format(*summaryStatus))
+    output_lines.append(template.format(*percentStatus))
 
     print("\n".join(output_lines))
