@@ -20,6 +20,8 @@ echo "PYTHONPATH=\$TOOLBOX:\$PYTHONPATH"                             >> $target
 echo "PYTHON27PATH=\$TOOLBOX:\$PYTHON27PATH"                         >> $target
 echo "PYTHON3PATH=\$TOOLBOX:\$PYTHON3PATH"                           >> $target
 echo "echo \"added \$TOOLBOX to PYTHONPATH\""                        >> $target
+echo ""                                                              >> $target
+echo "source \$TOOLBOX/check_for_updates.sh"                         >> $target
 echo "# =========================================== #"               >> $target
 
 echo "done." 
