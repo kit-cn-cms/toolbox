@@ -1,11 +1,10 @@
 cd $TOOLBOX
-if [[ $(git rev-parse HEAD) != $(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1) ]]
+if [[ $(git rev-parse HEAD) != $(git ls-remote origin master | cut -f1) ]]
 then
 
     if read -q "choice?Do you want to update TOOLBOX? [y/N] ";
     then
-        echo "\nupdating..."
-        echo "\tcommits to be updated:"
+        echo "\ncommits to be updated:"
 
         # collecting all commits
         IFS=$'\n' commits=($(git log --pretty=oneline origin master))
@@ -19,7 +18,7 @@ then
             fi
             echo $commit
         done
-        echo "\npulling..."
+        echo "\nupdating..."
         git pull origin master
         echo "done."
     fi
