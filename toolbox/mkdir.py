@@ -1,7 +1,8 @@
 import os
 import printer
+import shutil
 
-def mkdir(path):
+def mkdir(path, overwrite = False, versioning = False):
     if not os.path.isabs(path):
         path = os.path.abspath(path)
 
@@ -12,5 +13,17 @@ def mkdir(path):
 
     if not os.path.exists(path):
         os.mkdir(path)
-        printer.printPath("created directory {}".format(path))
+    elif versioning:
+        printer.printInfo("directory already exists - appending index")
+        idx = 1
+        while(os.path.exists(path+"_v"+str(idx))): idx+=1
+        path+="_v"+str(idx)
+
+        os.mkdir(path)
+    elif overwrite:
+        printer.printInfo("directory {} already exists -- deleting first".format(path))
+        shutil.rmtree(path)
+        os.mkdir(path)
+
+    printer.printPath("created directory {}".format(path))
     return os.path.abspath(path)
