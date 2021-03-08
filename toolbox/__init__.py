@@ -14,3 +14,4 @@ from mrcrab import print_crab_summary
 from mrcrab import setup_crab_query_parser
 
 import rutil
+import plotSetup

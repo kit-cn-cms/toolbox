@@ -42,12 +42,13 @@ def hadd(files, target, entries = -1, treeName = "Events"):
 
     # check availability of all files
     ok = True
-    for f in files:
-        if not checkFile(f, treeName):
-            ok = False
-            printer.printError("hadd input file {} is not ok".format(f))
-    if not ok:
-        return False
+    if not treeName is None:
+        for f in files:
+            if not checkFile(f, treeName):
+                ok = False
+                printer.printError("hadd input file {} is not ok".format(f))
+        if not ok:
+            return False
 
 
     if len(files) == 0:
