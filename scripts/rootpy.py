@@ -2,6 +2,11 @@ print("using rootpy.py")
 import ROOT
 import sys
 
+def setStyle(obj, color = ROOT.kBlack, lw = 2):
+    obj.SetLineColor(color)
+    obj.SetLineWidth(lw)
+    
+
 def getHistInfo(obj, name):
     h = obj.Get(name)
     nbins = h.GetNbinsX()
