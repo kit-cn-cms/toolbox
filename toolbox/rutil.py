@@ -11,24 +11,32 @@ def getEntries(f, treeName = "MVATree"):
     rf.Close()
     return entries
 
+debugFileCheck = True
 def checkFile(f, treeName = None):
+    if debugFileCheck: print("checking file {}".format(f))
     if not os.path.exists(f):
         return False
 
+    if debugFileCheck: print("1")
     rf = ROOT.TFile.Open(f)
     if rf is None or len(rf.GetListOfKeys()) == 0 or rf.TestBit(ROOT.TFile.kZombie):
         return False
 
+    if debugFileCheck: print("2")
     if rf.TestBit(ROOT.TFile.kRecovered):
         return False
 
+    if debugFileCheck: print("3")
     if not treeName is None:
         tree = rf.Get(treeName)
         if tree is None:
             return False
 
+        if debugFileCheck: print("4")
         nevts = tree.GetEntries()
         rf.Close()
+
+        if debugFileCheck: print("5")
         if nevts < 0:
             return False
         if nevts == 0:
@@ -38,8 +46,6 @@ def checkFile(f, treeName = None):
 
 
 def hadd(files, target, entries = -1, treeName = "Events"):
-    if entries<=0: treeName = None
-
     # check availability of all files
     ok = True
     if not treeName is None:
