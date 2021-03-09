@@ -313,8 +313,15 @@ def print_crab_summary(results):
         allGroups += list(res.detected_groups.keys())
     allGroups = list(set(allGroups))
 
+    # get length of result names
+    maxLength = 50
+    for res in results:
+        if len(res.name) > maxLength:
+            maxLength = len(res.name)
+    
+
     # build template
-    template = "{:<100} | {:<20} | {:<12} "
+    template = "{:<"+str(maxLength+1)+"} | {:<20} | {:<12} "
     for entry in allGroups:
         if "failed" in entry or "idle" in entry or "done" in entry or "finished" in entry or "running" in entry:
             template += "| {:<23} "
@@ -333,7 +340,7 @@ def print_crab_summary(results):
         output_lines.append(template.format(*statusList))
 
     # print total summary
-    output_lines.append("-"*101+"|")
+    output_lines.append("-"*(maxLength+2)+"|")
     summaryStatus = ["TOTAL", printyellow("")]
     percentStatus = ["", printyellow("")]
     total = -1
