@@ -27,13 +27,34 @@ def ropen(rootfile):
     tree = f.Get(treeName)
     return f, tree
 
-def vars(t, query=None):
+def getBranches(t, query=None):
+    branches = []
     for b in list(sorted(t.GetListOfBranches())):
         if not query:
-            print(b.GetName())
+            branches.append(b.GetName())
         elif query in b.GetName():
-            print(b.GetName())
+            branches.append(b.GetName())
+    return list(sorted(branches))
 
+    
+def vars(t, query=None):
+    branches = getBranches(t, query)
+    for b in branches:
+        print(b.GetName())
+
+def printEvent(t, query=None):
+    cont = True
+    idx = 0
+    branches = getBranches(t, query)
+    while cont:
+        t.GetEntry(idx)
+        print("=== TESTEVENT ===")
+        for b in branches:
+            print("{:<60s} = {}".format(b, eval("t."+b)))
+        print("=================")
+        if "q" in raw_input(" quit loop with q "):
+            cont = False
+        
 print("call 'help()' to show features")
 def help():
     print("usage:")
