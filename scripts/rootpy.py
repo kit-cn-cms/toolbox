@@ -40,7 +40,7 @@ def getBranches(t, query=None):
 def vars(t, query=None):
     branches = getBranches(t, query)
     for b in branches:
-        print(b.GetName())
+        print(b)
 
 def printEvent(t, query=None):
     cont = True
@@ -54,6 +54,7 @@ def printEvent(t, query=None):
         print("=================")
         if "q" in raw_input(" quit loop with q "):
             cont = False
+        idx+=1
         
 print("call 'help()' to show features")
 def help():
