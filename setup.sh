@@ -1,31 +1,29 @@
-target=~/.profile
-echo "adding aliases for scripts to $target" 
-echo ""                                                              >> $target
-echo "# =========================================== #"               >> $target
-echo "# toolbox commands"                                            >> $target
-echo ""                                                              >> $target
-echo "TOOLBOX=$PWD"                                                  >> $target
-echo ""                                                              >> $target
-echo "alias rootpy='python -i    \$TOOLBOX/scripts/rootpy.py'"       >> $target
-echo "alias  fitpy='python -i    \$TOOLBOX/scripts/fitpy.py'"        >> $target
-echo "alias  dnnpy='python -i    \$TOOLBOX/scripts/dnnpy.py'"        >> $target
-echo ""                                                              >> $target
-echo "alias mrcrab='python       \$TOOLBOX/scripts/mrcrab.py'"       >> $target
-echo ""                                                              >> $target
-echo "alias condorSubmit='python \$TOOLBOX/scripts/condorSubmit.py'" >> $target
+export TOOLBOX=/nfs/dust/cms/user/vdlinden/toolbox
 
-echo "adding toolbox to PYTHONPATH in $target"
-echo ""                                                              >> $target
-echo "PYTHONPATH=\$TOOLBOX:\$PYTHONPATH"                             >> $target
-echo "PYTHON27PATH=\$TOOLBOX:\$PYTHON27PATH"                         >> $target
-echo "PYTHON3PATH=\$TOOLBOX:\$PYTHON3PATH"                           >> $target
-echo "echo \"added \$TOOLBOX to PYTHONPATH\""                        >> $target
-echo ""                                                              >> $target
-echo "source \$TOOLBOX/check_for_updates.sh"                         >> $target
-echo "# =========================================== #"               >> $target
+alias rootpy='python -i    $TOOLBOX/scripts/rootpy.py'
+alias  fitpy='python -i    $TOOLBOX/scripts/fitpy.py'
+alias  dnnpy='python -i    $TOOLBOX/scripts/dnnpy.py'
 
-echo "done." 
-echo "this will be automatically loaded when you open your shell"
-echo "or via 'source $target'"
-echo ""
-python testprint.py
+alias mrcrab='python       $TOOLBOX/scripts/mrcrab.py'
+
+alias condorSubmit='python $TOOLBOX/scripts/condorSubmit.py'
+
+PYTHONPATH=$TOOLBOX:$PYTHONPATH
+PYTHON27PATH=$TOOLBOX:$PYTHON27PATH
+PYTHON3PATH=$TOOLBOX:$PYTHON3PATH
+echo "added $TOOLBOX to PYTHONPATH"
+
+cd $TOOLBOX
+if [[ $(git rev-parse HEAD) != $(git ls-remote origin master | cut -f1) ]]
+then
+
+    if read -q "choice?Do you want to update TOOLBOX? [y/N] ";
+    then
+        echo "\nupdating..."
+        git pull origin master
+        echo "done."
+    fi
+fi
+cd -
+
+

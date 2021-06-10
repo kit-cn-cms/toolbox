@@ -1,12 +1,18 @@
-cd $TOOLBOX
-if [[ $(git rev-parse HEAD) != $(git ls-remote origin master | cut -f1) ]]
-then
-
-    if read -q "choice?Do you want to update TOOLBOX? [y/N] ";
-    then
-        echo "\nupdating..."
-        git pull origin master
-        echo "done."
-    fi
-fi
-cd -
+echo ""
+echo ""
+echo ""
+echo ""
+echo ""
+echo "\033[1;36mWARNING"
+echo "the TOOLBOX repository was updated and requires a modification"
+echo "please enter your ~/.profile config and delete all the lines that are embrached by"
+echo "# =========================================== #"
+echo "# toolbox commands"
+echo "..."
+echo "# =========================================== #"
+echo ""
+echo "afterwards execute the install script as "
+echo "    cd \$TOOLBOX"
+echo "    source install.sh"
+echo ""
+echo "and restart your shell afterwards\033[0m"
