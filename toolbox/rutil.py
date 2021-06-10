@@ -11,7 +11,7 @@ def getEntries(f, treeName = "MVATree"):
     rf.Close()
     return entries
 
-debugFileCheck = True
+debugFileCheck = False
 def checkFile(f, treeName = None):
     if debugFileCheck: print("checking file {}".format(f))
     if not os.path.exists(f):
@@ -33,10 +33,14 @@ def checkFile(f, treeName = None):
             return False
 
         if debugFileCheck: print("4")
+        if not type(tree) == ROOT.TTree:
+            return False
+
+        if debugFileCheck: print("5")
         nevts = tree.GetEntries()
         rf.Close()
 
-        if debugFileCheck: print("5")
+        if debugFileCheck: print("6")
         if nevts < 0:
             return False
         if nevts == 0:
@@ -96,8 +100,9 @@ def mergeCutflow(files, target):
                 values[match.group(2)] = 0
 
             if not match.group(2) in stages:
-                printer.printError("cutflow files not compatible")
-                return False
+                #printer.printError("cutflow step {} not in first file".format(match.group(2)))
+                stages.append(match.group(2))
+                values[match.group(2)] = 0
             
             values[match.group(2)] += int(match.group(3))
 

@@ -145,9 +145,10 @@ def getLineWithAxisSetup(plotName, nBins, yValue, yMin, yMax, xLabels, yLabel, y
     line.GetYaxis().SetTitle(yLabel)
     return line
 
-def setupHistogram(hist, lw = 2, lc = ROOT.kBlack, fc = None):
+def setupHistogram(hist, lw = 2, lc = ROOT.kBlack, fc = None, ls = 1):
     hist.SetLineColor(lc)
     hist.SetLineWidth(lw)
+    hist.SetLineStyle(ls)
     if not fc is None:
         hist.SetFillColor(fc)
 
