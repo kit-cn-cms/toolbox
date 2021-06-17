@@ -1,6 +1,7 @@
 import ROOT
 import re 
 import os
+import subprocess
 
 import printer
 
@@ -48,8 +49,12 @@ def checkFile(f, treeName = None):
 
     return True
 
+def chunks(l, n):
+    """Yield successive n-sized chunks from l."""
+    for i in range(0, len(l), n):
+        yield l[i:i + n]
 
-def hadd(files, target, entries = -1, treeName = "Events"):
+def hadd(files, target, entries = -1, treeName = "Events", inChunks=True):
     # check availability of all files
     ok = True
     if not treeName is None:
@@ -64,12 +69,33 @@ def hadd(files, target, entries = -1, treeName = "Events"):
     if len(files) == 0:
         printer.printError("no files passed to hadd")
         return False
-    if len(files) == 1:
-        cmd = ["cp"]+files+[target]
+    if not inChunks:
+        if len(files) == 1:
+            cmd = ["cp"]+files+[target]
+        else:
+            cmd = ["hadd"]+["-fk"]+[target]+files
+        # print(" ".join(cmd))
+        # os.system("ulimit -s unlimited")
+        os.system(" ".join(cmd))
     else:
-        cmd = ["hadd"]+["-fk"]+[target]+files
-
-    os.system(" ".join(cmd))
+        # hadd in chunks
+        hadd_parts = []
+        for i, ch in enumerate(chunks(files,500)):
+            outFile = target.replace(".root","")+"_chunk_{}.root".format(i)
+            hadd_parts.append(outFile)
+            print(len(ch)) 
+            cmd = "hadd -fk {outFile} {files} ".format(files=" ".join(ch), outFile=outFile)
+            # print(cmd)
+            subprocess.call(cmd, shell=True)
+            print("-"*50)
+        # hadd all chunks together
+        cmd = "hadd {outFile} {files}".format(files =" ".join(hadd_parts), outFile = target)
+        print(cmd)
+        subprocess.call(cmd, shell=True)
+        # remove hadd parts
+        cmd = "rm {files}".format(files = " ".join(hadd_parts))
+        print(cmd)
+        subprocess.call(cmd, shell=True)
 
     if entries >= 0:
         haddedEntries = getEntries(target, treeName)
