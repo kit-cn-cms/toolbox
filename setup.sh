@@ -1,5 +1,3 @@
-source /nfs/dust/cms/user/vdlinden/toolbox/check_for_updates.sh
-
 alias rootpy='python -i    $TOOLBOX/scripts/rootpy.py'
 alias  fitpy='python -i    $TOOLBOX/scripts/fitpy.py'
 alias  dnnpy='python -i    $TOOLBOX/scripts/dnnpy.py'
