@@ -3,6 +3,7 @@ import re
 import os
 
 import printer
+from execute import execute 
 
 def getEntries(f, treeName = "MVATree"):
     rf = ROOT.TFile.Open(f, "READ")
@@ -69,7 +70,7 @@ def hadd(files, target, entries = -1, treeName = "Events"):
     else:
         cmd = ["hadd"]+["-fk"]+[target]+files
 
-    os.system(" ".join(cmd))
+    execute(" ".join(cmd))
 
     if entries >= 0:
         haddedEntries = getEntries(target, treeName)
