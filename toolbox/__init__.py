@@ -15,3 +15,6 @@ from mrcrab import setup_crab_query_parser
 
 import rutil
 import plotSetup
+
+from harryPlotter.harryPlotter import HarryPlotter
+from harryPlotter.HistogramSetup import HistogramSetup

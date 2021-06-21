@@ -1,9 +1,43 @@
 import ROOT
 
-def getCanvas(name = "canvas", log = False, pulls = False, ratio = False, twodim = False):
+def getCanvas(name = "canvas", 
+    log = False, pulls = False, 
+    ratio = False, doubleRatio = False, 
+    twodim = False, sideLegend = False):
+    x = 0
+    r = 0
+    if sideLegend:
+        x = 256
+        r = 0.15
     # generate canvas
-    if ratio:
-        canvas = ROOT.TCanvas(name, name, 1024, 1024)
+    if doubleRatio:
+        canvas = ROOT.TCanvas(name, name, 1024+x, 1280)
+        canvas.Divide(1,3)
+        canvas.cd(1).SetPad(0., 0.4, 1.0, 1.0)
+        canvas.cd(1).SetTopMargin(0.07)
+        canvas.cd(1).SetBottomMargin(0.0)
+
+        canvas.cd(2).SetPad(0., 0.25, 1.0, 0.4)
+        canvas.cd(2).SetTopMargin(0.0)
+        canvas.cd(2).SetBottomMargin(0.0)
+
+        canvas.cd(3).SetPad(0., 0.0, 1.0, 0.25)
+        canvas.cd(3).SetTopMargin(0.0)
+        canvas.cd(3).SetBottomMargin(0.1/0.25)
+
+        canvas.cd(1).SetRightMargin(0.05+r)
+        canvas.cd(2).SetRightMargin(0.05+r)
+        canvas.cd(3).SetRightMargin(0.05+r)
+
+        canvas.cd(1).SetLeftMargin(0.15)
+        canvas.cd(2).SetLeftMargin(0.15)
+        canvas.cd(3).SetLeftMargin(0.15)
+
+        canvas.cd(1).SetTicks(1,1)
+        canvas.cd(2).SetTicks(1,1)
+        canvas.cd(3).SetTicks(1,1)
+    elif ratio:
+        canvas = ROOT.TCanvas(name, name, 1024+x, 1024)
         canvas.Divide(1,2)
         canvas.cd(1).SetPad(0.,0.3,1.0,1.0)
         canvas.cd(1).SetTopMargin(0.07)
@@ -13,27 +47,27 @@ def getCanvas(name = "canvas", log = False, pulls = False, ratio = False, twodim
         canvas.cd(2).SetTopMargin(0.0)
         canvas.cd(2).SetBottomMargin(0.4)
 
-        canvas.cd(1).SetRightMargin(0.05)
+        canvas.cd(1).SetRightMargin(0.05+r)
         canvas.cd(1).SetLeftMargin(0.15)
         canvas.cd(1).SetTicks(1,1)
 
-        canvas.cd(2).SetRightMargin(0.05)
+        canvas.cd(2).SetRightMargin(0.05+r)
         canvas.cd(2).SetLeftMargin(0.15)
         canvas.cd(2).SetTicks(1,1)
     elif twodim:
-        canvas = ROOT.TCanvas(name, name, 1024, 1024)
+        canvas = ROOT.TCanvas(name, name, 1024+x, 1024)
         canvas.SetBottomMargin(0.2)
         canvas.SetLeftMargin(0.2)
         canvas.SetTopMargin(0.2)   
-        canvas.SetRightMargin(0.2)
+        canvas.SetRightMargin(0.2+r)
     else:
-        canvas = ROOT.TCanvas(name, name, 1024, 768)
+        canvas = ROOT.TCanvas(name, name, 1024+x, 768)
         canvas.SetTopMargin(0.07)
         if not pulls:
             canvas.SetBottomMargin(0.15)
         if pulls:
             canvas.SetBottomMargin(0.25)
-        canvas.SetRightMargin(0.05)
+        canvas.SetRightMargin(0.05+r)
         canvas.SetLeftMargin(0.15)
         canvas.SetTicks(1,1)
 
@@ -72,7 +106,21 @@ def getLegend(pulls = False, ratio = False):
         legend.SetFillStyle(0)
     return legend
 
-def printCMSLabel(pad, privateWork = True):
+def printChannelLabel(pad, channelLabel, ratio = True):
+    pad.cd(1)
+    l = pad.GetLeftMargin()
+    t = pad.GetTopMargin()
+    r = pad.GetRightMargin()
+    b = pad.GetBottomMargin()
+
+    latex = ROOT.TLatex()
+    latex.SetNDC()
+    latex.SetTextColor(ROOT.kBlack)
+
+    if ratio: latex.DrawLatex(l+0.09,1.-t-0.06, channelLabel)
+    else:     latex.DrawLatex(l+0.04,1.-t-0.08, channelLabel)
+
+def printCMSLabel(pad, privateWork = True, ratio = True):
     pad.cd(1)
     l = pad.GetLeftMargin()
     t = pad.GetTopMargin()
@@ -87,9 +135,10 @@ def printCMSLabel(pad, privateWork = True):
     text = "CMS"
     if privateWork: text += " #bf{#it{private work}}"
 
-    latex.DrawLatex(l+0.05,1.-t+0.04, text)
+    if ratio: latex.DrawLatex(l+0.1, 1.-t+0.04, text)
+    else:     latex.DrawLatex(l+0.06,1.-t+0.01, text)
 
-def printLumiLabel(pad, lumi):
+def printLumiLabel(pad, lumi, ratio = True, sideLegend = False):
     pad.cd(1)
     l = pad.GetLeftMargin()
     t = pad.GetTopMargin()
@@ -101,7 +150,14 @@ def printLumiLabel(pad, lumi):
     latex.SetTextColor(ROOT.kBlack)
     latex.SetTextSize(0.04)
     text = "#bf{"+str(lumi)+" fb^{-1} (13 TeV)}"
-    latex.DrawLatex(1.-r-0.15,1.-t+0.04, text)
+    offset = 0.
+    if sideLegend and ratio:
+        offset = 0.12
+    elif sideLegend and not ratio:
+        offset = 0.02
+            
+    if ratio: latex.DrawLatex(1.-r-0.15-offset,1.-t+0.04, text)
+    else:     latex.DrawLatex(1.-r-0.15-offset,1.-t+0.01, text)
 
 def getHorizontalLine(y, minVal, maxVal, style):
     if y is None: return None
