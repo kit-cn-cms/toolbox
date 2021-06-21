@@ -256,7 +256,15 @@ class CrabResult:
 
         for entry in groups:
             if entry in self.detected_groups:
-                status.append(printcolor(self.detected_groups[entry], entry))
+                if entry == "finished":
+                    n = self.detected_groups[entry]
+                    if self.njobs == -1:
+                        string = n
+                    else:
+                        string = "{:<5s} ({:5.1f}%)".format(str(n), 100*float(n)/float(self.njobs))
+                    status.append(printcolor(string, entry))
+                else:
+                    status.append(printcolor(self.detected_groups[entry], entry))
             else:
                 status.append(printcolor("", entry))
         return status
@@ -323,8 +331,10 @@ def print_crab_summary(results):
     # build template
     template = "{:<"+str(maxLength+1)+"} | {:<20} | {:<12} "
     for entry in allGroups:
-        if "failed" in entry or "idle" in entry or "done" in entry or "finished" in entry or "running" in entry:
+        if "failed" in entry or "idle" in entry or "done" in entry or "running" in entry:
             template += "| {:<23} "
+        elif "finished" in entry:
+            template += "| {:<25} "
         else:
             template += "| {:<12} "
 
