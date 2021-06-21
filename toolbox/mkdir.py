@@ -2,14 +2,14 @@ import os
 import printer
 import shutil
 
-def mkdir(path, overwrite = False, versioning = False):
+def mkdir(path, overwrite = False, versioning = False, subcall = False):
     if not os.path.isabs(path):
         path = os.path.abspath(path)
 
     # check if subdirectories exist first
     subdir = os.path.dirname(path)
     if not os.path.exists(subdir):
-        mkdir(subdir)
+        mkdir(subdir, subcall = True)
 
     if not os.path.exists(path):
         os.mkdir(path)
@@ -24,6 +24,10 @@ def mkdir(path, overwrite = False, versioning = False):
         printer.printInfo("directory {} already exists -- deleting first".format(path))
         shutil.rmtree(path)
         os.mkdir(path)
+    else:
+        # nothing needs to be done
+        return os.path.abspath(path)
 
-    printer.printPath("created directory {}".format(path))
+    if not subcall:
+        printer.printPath("created directory {}".format(path))
     return os.path.abspath(path)
