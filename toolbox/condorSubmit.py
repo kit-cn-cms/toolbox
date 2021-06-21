@@ -9,6 +9,8 @@ import time
 import optparse
 import sys
 
+import printer
+
 submitTemplateNAF = """
 universe = vanilla
 executable = /bin/zsh
@@ -77,7 +79,7 @@ echo "$SGE_TASK_ID"
     st = os.stat(path)
     os.chmod(path, st.st_mode | stat.S_IEXEC)
     
-    print("wrote array script "+str(path))
+    #print("wrote array script "+str(path))
     return path
 
 
@@ -119,13 +121,12 @@ Queue Environment From (
     with open(path, "w") as f:
         f.write(code)
 
-    print("wrote submit script "+str(path))
+    #print("wrote submit script "+str(path))
     return path
 
 def condorSubmit(submitPath):
     submitCommand = "condor_submit -terse "+ submitPath
-    print("submitting:")
-    print(submitCommand)
+    printer.printCommand("submitting {}".format(submitCommand))
     tries = 0
     jobID = None
     while not jobID:
@@ -149,16 +150,20 @@ def condorSubmit(submitPath):
 
 
 
-def monitorJobStatus(jobIDs = None):
-    ''' monitoring of jobs via condor_q function. Loops condor_q output until all scripts have been terminated
-    jobIDs: list of IDs of jobs to be monitored (if no argument is given, all jobs of the current NAF user are monitored)
-    hold: if set True also waits on jobs in hold state to be finished
+def monitorJobStatus(jobIDs = None, queryInterval = 60, nTotalJobs = None):
+    ''' 
+        monitoring of jobs via condor_q function. 
+        Loops condor_q output until all scripts have been terminated
+
+        jobIDs: list of IDs of jobs to be monitored 
+            (if no argument is given, all jobs of the current NAF user are monitored)
     
-    no return '''
+    no return 
+    '''
 
     allfinished=False
     errorcount = 0
-    print "checking job status in condor_q ..."
+    printer.printAction( "checking job status in condor_q ...",1)
     command = ["condor_q"]
     # adding jobIDs to command
     if jobIDs:
@@ -174,9 +179,10 @@ def monitorJobStatus(jobIDs = None):
     helds = []
     totals = []
     while not allfinished:
-        time.sleep(60)
+        time.sleep(queryInterval)
         # calling condor_q command
-        a = subprocess.Popen(command, stdout=subprocess.PIPE,stderr=subprocess.STDOUT,stdin=subprocess.PIPE)
+        a = subprocess.Popen(command, 
+            stdout=subprocess.PIPE,stderr=subprocess.STDOUT,stdin=subprocess.PIPE)
         a.wait()
         qstat = a.communicate()[0]
         nrunning = 0
@@ -186,14 +192,18 @@ def monitorJobStatus(jobIDs = None):
         if len(querylines) == 0:
             errorcount += 1
             # sometimes condor_q is not reachable - if this happens a lot something is probably wrong
-            print("line does not match query")
+            printer.printWarning("line does not match query")
             if errorcount == 30:
-                print("something is off - condor_q has not worked for 15 minutes ...")
+                printer.printWarning(
+                    "something is off - condor_q has not worked for {} minutes ...".format(
+                        int(30*queryInterval/60)))
                 time.sleep(120)
-            if errorcount == 100:
-                print("this does not work anymore - removing jobs")
+            if errorcount == 60:
+                printer.printError("this does not work anymore - removing jobs")
                 command[0] = "condor_rm"
-                a = subprocess.Popen(command, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, stdin = subprocess.PIPE)
+                printer.printCommand(command)
+                a = subprocess.Popen(command, 
+                    stdout = subprocess.PIPE, stderr = subprocess.STDOUT, stdin = subprocess.PIPE)
                 return
             continue
 
@@ -208,13 +218,19 @@ def monitorJobStatus(jobIDs = None):
             jobsHeld += int(re.findall(r'\ [0-9]+\ held', line)[0][1:-5])
 
         nrunning += jobsRunning + jobsIdle + jobsHeld
-        print("{:4d} running | {:4d} idling | {:4d} held |\t total: {:4d}".format(jobsRunning, jobsIdle, jobsHeld, nrunning))
+        printLine = "\033[1;32m{:4d} running\033[0m | \033[1;33m{:4d} idling\033[0m | "
+        printLine+= "\033[1;31m{:4d} held\033[0m |\t \033[1;34mtotal: {:4d}\033[0m"
+        printLine = printLine.format(
+                        jobsRunning, jobsIdle, jobsHeld, nrunning)
+        if not nTotalJobs is None:
+            printLine+= "/\033[1;34m{}\033[0m".format(nTotalJobs)
+        print(printLine)
 
         if nrunning == 0:
-            print("waiting on no more jobs - exiting loop")
+            printer.printAction("waiting on no more jobs - exiting loop")
             allfinished=True
 
-    print("all jobs are finished - exiting monitorJobStatus")
+    printer.printInfo("all jobs are finished - exiting monitorJobStatus")
     return
 
 
@@ -233,8 +249,10 @@ if __name__ == "__main__":
     parser.add_option("-m","--monitorStatus", action = "store_true", dest = "monitorStatus", default = False, metavar = "MONITORSTATUS",
         help = "Monitor the job status after submission with 'condor_q' until all jobs are done.")
 
-    parser.add_option("-o","--outputdir", dest = "outputdir", default = os.path.dirname(os.path.realpath(__file__))+"/../workdir", metavar = "OUTPUTDIR",
-        help = "Path to output directory for log files and submit scripts (relative or absolute). Default=/workdir")
+    parser.add_option("-o","--outputdir", dest = "outputdir", 
+        default = os.path.dirname(os.path.realpath(__file__))+"/../workdir", metavar = "OUTPUTDIR",
+        help = "Path to output directory for log files and submit scripts (relative or absolute)."
+               " Default=/workdir")
     
     parser.add_option("-M","--memory",type="string",default="2000",dest="memory",metavar = "MEMORY",
         help = "Amount of memory in MB which is requested for the machines")
