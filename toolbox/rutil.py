@@ -5,6 +5,11 @@ import os
 import printer
 from execute import execute 
 
+def chunks(l, n):
+    """Yield successive n-sized chunks from l."""
+    for i in range(0, len(l), n):
+        yield l[i:i + n]
+
 def getEntries(f, treeName = "MVATree"):
     rf = ROOT.TFile.Open(f, "READ")
     tree = rf.Get(treeName)
@@ -50,7 +55,7 @@ def checkFile(f, treeName = None):
     return True
 
 
-def hadd(files, target, entries = -1, treeName = "Events"):
+def hadd(files, target, entries = -1, treeName = "Events", inChunks=True, chunkSize=500):
     # check availability of all files
     ok = True
     if not treeName is None:
@@ -65,12 +70,28 @@ def hadd(files, target, entries = -1, treeName = "Events"):
     if len(files) == 0:
         printer.printError("no files passed to hadd")
         return False
-    if len(files) == 1:
-        cmd = ["cp"]+files+[target]
-    else:
-        cmd = ["hadd"]+["-fk"]+[target]+files
 
-    execute(" ".join(cmd))
+    if not inChunks:
+        if len(files) == 1:
+            cmd = ["cp"]+files+[target]
+        else:
+            cmd = ["hadd"]+["-fk"]+[target]+files
+
+        execute(" ".join(cmd))
+    else:
+        # hadd in chunks
+        hadd_parts = []
+        for i, ch in enumerate(chunks(files, chunkSize)):
+            outFile = target.replace(".root","")+"_chunk_{}.root".format(i)
+            hadd_parts.append(outFile)
+            cmd = "hadd -fk {outFile} {files} ".format(files=" ".join(ch), outFile=outFile)
+            execute(cmd)
+        # hadd all chunks together
+        cmd = "hadd {outFile} {files}".format(files =" ".join(hadd_parts), outFile = target)
+        execute(cmd)
+        # remove hadd parts
+        cmd = "rm {files}".format(files = " ".join(hadd_parts))
+        execute(cmd)
 
     if entries >= 0:
         haddedEntries = getEntries(target, treeName)
