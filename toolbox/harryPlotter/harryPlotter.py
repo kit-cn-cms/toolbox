@@ -2,6 +2,7 @@ import ROOT
 ROOT.gROOT.SetBatch(True)
 
 import pandas as pd
+import sys
 
 #############################################################
 # adapted from pyroot-plotscripts/tools/utis/Plots.py       #
@@ -143,7 +144,7 @@ class HarryPlotter(HPSetters):
             if not ogName in self.templates:
                 printer.printWarning("\t process {} for merge {} not defined".format(
                     ogName, targetName))
-                sys.exit()
+                continue
             ogTemplates.append(self.templates[ogName])
 
         # build new template

@@ -146,7 +146,14 @@ class HistogramSetup(HSSetters):
         
         # build histogram stacks
         stack = None
-        for proc in stackTemplates:
+        tempTemplates = [t for t in stackTemplates]
+        for proc in tempTemplates:
+            printer.printInfo("\tstacking: "+proc)
+            if not proc in templates:
+                printer.printWarning(
+                    "\tprocess {} is not defined".format(proc))
+                stackTemplates.pop(stackTemplates.index(proc))
+                continue
             # adding template to stakc
             if stack is None:
                 stack = templates[proc].nom.Clone()
@@ -433,9 +440,9 @@ class HistogramSetup(HSSetters):
         adjust errorband size to ratio
         '''
         for iBin in range(g.GetN()):
-            x = ROOT.Double()
-            y = ROOT.Double()
-            g.GetPoint(iBin, x, y)
+            x = g.GetPointX(iBin)
+            y = g.GetPointY(iBin)
+            #g.GetPoint(iBin, x, y)
             if not frac:
                 g.SetPoint(iBin, x, 1)
             else:
@@ -502,6 +509,8 @@ class HistogramSetup(HSSetters):
         c.cd(1)
         nLegendEntries = 0
         firstPlot = True
+        print(stackTemplates)
+        print(stackedHistograms)
         for idx in range(len(stackTemplates)-1, -1, -1):
             proc = stackTemplates[idx]
             printer.printInfo("\tadding process to stack {}".format(proc))
