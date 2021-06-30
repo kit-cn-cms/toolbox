@@ -42,9 +42,14 @@ errorbandStyles = {
     "stat":         (1001, ROOT.kBlack,    0.3),
     "syst":         (1001, ROOT.kBlack,    0.3),
     "experimental": (1001, ROOT.kRed,      0.3),
-    "btag":         (3254, ROOT.kGreen+2,  1.0),
-    "jec":          (3154, ROOT.kOrange+1, 1.0),
     "theo":         (1001, ROOT.kBlue,     0.3),
+
+    "btag":         (3254, ROOT.kGreen+2,  1.0),
+    "jec":          (3145, ROOT.kOrange+1, 1.0),
+    "qcdscale":     (3472, ROOT.kGray+2,   1.0),
+    "ps":           (3227, ROOT.kBlue+1,   1.0),
+    "pu":           (3244, ROOT.kMagenta,  1.0),
+    "lep":          (3257, ROOT.kRed+1,    1.0),
     }
 
 def getErrorStyle(sys):

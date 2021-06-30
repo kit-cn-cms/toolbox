@@ -509,8 +509,6 @@ class HistogramSetup(HSSetters):
         c.cd(1)
         nLegendEntries = 0
         firstPlot = True
-        print(stackTemplates)
-        print(stackedHistograms)
         for idx in range(len(stackTemplates)-1, -1, -1):
             proc = stackTemplates[idx]
             printer.printInfo("\tadding process to stack {}".format(proc))
