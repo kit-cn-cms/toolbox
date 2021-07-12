@@ -75,7 +75,7 @@ def hadd(files, target, entries = -1, treeName = "Events", inChunks=True, chunkS
         if len(files) == 1:
             cmd = ["cp"]+files+[target]
         else:
-            cmd = ["hadd"]+["-fk"]+[target]+files
+            cmd = ["hadd"]+["-v", "0"]+["-fk"]+[target]+files
 
         execute(" ".join(cmd))
     else:
@@ -84,10 +84,10 @@ def hadd(files, target, entries = -1, treeName = "Events", inChunks=True, chunkS
         for i, ch in enumerate(chunks(files, chunkSize)):
             outFile = target.replace(".root","")+"_chunk_{}.root".format(i)
             hadd_parts.append(outFile)
-            cmd = "hadd -fk {outFile} {files} ".format(files=" ".join(ch), outFile=outFile)
+            cmd = "hadd -v 0 -fk {outFile} {files} ".format(files=" ".join(ch), outFile=outFile)
             execute(cmd)
         # hadd all chunks together
-        cmd = "hadd {outFile} {files}".format(files =" ".join(hadd_parts), outFile = target)
+        cmd = "hadd -f -v 0 {outFile} {files}".format(files =" ".join(hadd_parts), outFile = target)
         execute(cmd)
         # remove hadd parts
         cmd = "rm {files}".format(files = " ".join(hadd_parts))
