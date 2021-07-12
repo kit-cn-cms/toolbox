@@ -10,7 +10,7 @@ def chunks(l, n):
     for i in range(0, len(l), n):
         yield l[i:i + n]
 
-def getEntries(f, treeName = "MVATree"):
+def getEntries(f, treeName = "Events"):
     rf = ROOT.TFile.Open(f, "READ")
     tree = rf.Get(treeName)
     entries = int(tree.GetEntries())
@@ -71,12 +71,12 @@ def hadd(files, target, entries = -1, treeName = "Events", inChunks=True, chunkS
         printer.printError("no files passed to hadd")
         return False
 
-    if not inChunks:
-        if len(files) == 1:
-            cmd = ["cp"]+files+[target]
-        else:
-            cmd = ["hadd"]+["-fk"]+[target]+files
-
+    if len(files) == 1:
+        cmd = ["cp"]+files+[target]
+        execute(" ".join(cmd))
+        return True
+    elif not inChunks or len(files) <= chunkSize:
+        cmd = ["hadd"]+["-fk"]+[target]+files
         execute(" ".join(cmd))
     else:
         # hadd in chunks
