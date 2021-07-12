@@ -20,7 +20,7 @@ if sys.argv[-1].startswith("tree="):
     treeName = sys.argv[-1].split("tree=")[1]
 else:
     rootfiles = sys.argv[1:]
-    treeName = "MVATree"
+    treeName = "Events"
 
 def ropen(rootfile):
     f = ROOT.TFile(rootfile)

@@ -10,6 +10,7 @@ from condorSubmit import submitToBatch
 from condorSubmit import monitorJobStatus
 
 from mrcrab import crab_query
+from mrcrab import crab_report
 from mrcrab import print_crab_summary
 from mrcrab import setup_crab_query_parser
 

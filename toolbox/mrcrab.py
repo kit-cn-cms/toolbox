@@ -93,6 +93,29 @@ class CrabResult:
             
         return True
 
+    def query_crab_report(self):
+        # build crab command
+        command = ["crab", "report", self.path]
+        
+        process = subprocess.Popen(command, 
+            stdout = subprocess.PIPE, 
+            stderr = subprocess.STDOUT, 
+            stdin  = subprocess.PIPE)
+
+        process.stdin.write("\n")
+        process.wait()
+        self.query = process.communicate()[0]
+        if "Enter GRID pass phrase" in self.query:
+            printer.printError("need to init voms proxy")
+            sys.exit()
+        
+        self.query = self.query.replace("\t"," ")
+        self.query = self.query.replace("\n"," ")
+        while "  " in self.query:
+            self.query = self.query.replace("  "," ")
+            
+        return True
+
     def get_status(self):
         if "Status on the scheduler: COMPLETED" in self.query:
             self.status = "COMPLETED"
@@ -100,6 +123,9 @@ class CrabResult:
         elif "Status on the CRAB server: SUBMITTED" in self.query:
             self.status = "SUBMITTED"
             self.status_str = printblue("SUBMITTED")
+        elif "Status on the CRAB server: KILLED" in self.query:
+            self.status = "KILLED"
+            self.status_str = printblue("KILLED")
         else:
             self.status = "FAILED"
             self.status_str = printred("FAILED")
@@ -311,7 +337,15 @@ def crab_query(project, opts):
     
     return res
     
+# function to create crab report
+def crab_report(project, opts):
+    # initialize crab result class
+    res = CrabResult(project)
 
+    # perform crab query
+    res.query_crab_report()
+    
+    return res
 
 
 # print summary table
