@@ -48,7 +48,7 @@ class HarryPlotter(HPSetters):
         '''
         pass
 
-    def loadFromSystFile(self, systFile):
+    def loadFromSystFile(self, systFile, cloneProcesses = {}):
         '''
         Load all the information from a systematics csv file
         '''
@@ -59,6 +59,11 @@ class HarryPlotter(HPSetters):
         self.rf = ROOT.TFile(self.inputFile)
         self.sf = pd.read_csv(systFile, sep = ",")
         self.sf.fillna("-", inplace = True)
+
+        # clone processes
+        for ogProcess in cloneProcesses:
+            for newProcess in cloneProcesses[ogProcess]:
+                self.sf[newProcess] = self.sf[ogProcess]
 
         # get all process names that are defined in the systematics file
         columns = ["Uncertainty", "Type", "Construction", "Up", "Down", "SysGroup"]

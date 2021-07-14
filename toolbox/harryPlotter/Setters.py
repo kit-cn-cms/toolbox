@@ -72,6 +72,9 @@ class HSSetters:
         self.setDifferenceRatio()
         self.setDifferenceRatioLabel()
 
+        self.setWideCanvas()
+        self.setGrid()
+
         self.setSumSystsBetweenProcesses()
 
     def __str__(self):
@@ -103,6 +106,8 @@ class HSSetters:
         printer.printInfo("\tAddDifferenceRatio:   {}".format(self.differenceRatio))
         if self.differenceRatio:
             printer.printInfo("\tDifferenceRatioLabel: {}".format(self.differenceRatioLabel))
+        printer.printInfo("\tWideCanvas:           {}".format(self.wideCanvas))
+        printer.printInfo("\tGrid:                 {}".format(self.grid))
         return ""
 
     def setPlottingOrder(self, plottingOrder = []):
@@ -186,6 +191,11 @@ class HSSetters:
     def setDifferenceRatioLabel(self, label = "$DATA - Background"):
         self.differenceRatioLabel = label
 
+    def setWideCanvas(self, val = False):
+        self.wideCanvas = val
+    
+    def setGrid(self, val = False):
+        self.grid = val
 
     def setSumSystsBetweenProcesses(self, linear = False):
         self.sumSystsBetweenProcessesLinear = linear

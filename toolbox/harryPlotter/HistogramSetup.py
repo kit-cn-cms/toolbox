@@ -9,6 +9,14 @@ import hpUtil
 from Setters import HSSetters
 
 class HistogramSetup(HSSetters):
+    def removeZeroTemplates(self, templates):
+        newTemplates = {}
+        for t in templates:
+            if templates[t].nom.Integral() == 0:    
+                continue
+            newTemplates[t] = templates[t]
+        return newTemplates 
+
     def getStackTemplatesInOrder(self, templates):
         '''
         loop over all templates and find out if they are to be put into the stack 
@@ -218,17 +226,20 @@ class HistogramSetup(HSSetters):
             yMax =    max(yMax, h.GetBinContent(h.GetMaximumBin()))
             yMinMax = min(yMinMax, h.GetBinContent(h.GetMaximumBin()))
         if self.logY:   
-            return yMinMax/1000+1e-10, yMax*10
+            return yMinMax/100000+1e-10, yMax*10
         else:
             return 1e-2, yMax*1.5
 
-    def getDataInfo(self, histStack = True):
+    def getDataInfo(self, templates, histStack = True):
         '''
         get info if data is used and label for data
         '''
         # determine if data is used
         # data will not be used of there is no stack of histograms
         useData = ((not self.plotBlind) and histStack)
+        if self.realData and not "data_obs" in templates:
+            printer.printWarning("\tno data_obs template available for data")
+            useData = False
 
         # get data label    
         if self.realData:
@@ -285,11 +296,17 @@ class HistogramSetup(HSSetters):
 
         # edit y axis
         h.GetYaxis().SetTitle(yTitle)
-        h.GetYaxis().SetTitleSize(
-            h.GetYaxis().GetTitleSize()*1.5)
-        h.GetYaxis().SetLabelSize(
-            h.GetYaxis().GetLabelSize()*1.2)
-
+        if self.wideCanvas:
+            h.GetYaxis().SetTitleSize(
+                h.GetYaxis().GetTitleSize()*1.8)
+            h.GetYaxis().SetLabelSize(
+                h.GetYaxis().GetLabelSize()*1.6)
+            h.GetYaxis().SetTitleOffset(0.6)
+        else:
+            h.GetYaxis().SetTitleSize(
+                h.GetYaxis().GetTitleSize()*1.5)
+            h.GetYaxis().SetLabelSize(
+                h.GetYaxis().GetLabelSize()*1.2)
         # edit x axis
         h.GetXaxis().SetTitle("")
         if not doRatio:
@@ -378,16 +395,28 @@ class HistogramSetup(HSSetters):
         line.GetXaxis().SetTitle(xTitle)
 
         # scale axis legends
-        line.GetXaxis().SetLabelSize(line.GetXaxis().GetLabelSize()*2.4)
-        line.GetXaxis().SetTitleSize(line.GetXaxis().GetTitleSize()*3)
+        if self.wideCanvas:
+            line.GetXaxis().SetLabelSize(line.GetXaxis().GetLabelSize()*3.5)
+            line.GetXaxis().SetTitleSize(line.GetXaxis().GetTitleSize()*3.5)
+        else:
+            line.GetXaxis().SetLabelSize(line.GetXaxis().GetLabelSize()*2.4)
+            line.GetXaxis().SetTitleSize(line.GetXaxis().GetTitleSize()*3)
         if doubleRatio and frac:
-            line.GetYaxis().SetLabelSize(line.GetYaxis().GetLabelSize()*3.3)
-            line.GetYaxis().SetTitleSize(line.GetYaxis().GetTitleSize()*2.5)
-            line.GetYaxis().SetTitleOffset(0.3)
+            if self.wideCanvas:
+                line.GetYaxis().SetLabelSize(line.GetYaxis().GetLabelSize()*3.5)
+                line.GetYaxis().SetTitleSize(line.GetYaxis().GetTitleSize()*3.2)
+                line.GetYaxis().SetTitleOffset(0.2)
+            else:
+                line.GetYaxis().SetLabelSize(line.GetYaxis().GetLabelSize()*3.3)
+                line.GetYaxis().SetTitleSize(line.GetYaxis().GetTitleSize()*2.5)
+                line.GetYaxis().SetTitleOffset(0.3)
         else:
             line.GetYaxis().SetLabelSize(line.GetYaxis().GetLabelSize()*2.2)
             line.GetYaxis().SetTitleSize(line.GetYaxis().GetTitleSize()*1.8)
-            line.GetYaxis().SetTitleOffset(0.5)
+            if self.wideCanvas:
+                line.GetYaxis().SetTitleOffset(0.3)
+            else:
+                line.GetYaxis().SetTitleOffset(0.5)
 
         # set bin contents and errors
         line.GetYaxis().SetNdivisions(505)
@@ -426,8 +455,9 @@ class HistogramSetup(HSSetters):
                 r.SetBinContent(iBin+1,
                     (r.GetBinContent(iBin+1)-stack.GetBinContent(iBin+1)))
             rMax = max(r.GetBinContent(iBin+1), rMax)   
-            rMim = min(r.GetBinContent(iBin+1), rMin)   
+            rMin = min(r.GetBinContent(iBin+1), rMin)   
 
+        
         r.SetLineColor(ROOT.kBlack)
         r.SetLineWidth(1)
         r.SetMarkerStyle(20)
@@ -444,7 +474,7 @@ class HistogramSetup(HSSetters):
             y = g.GetPointY(iBin)
             #g.GetPoint(iBin, x, y)
             if not frac:
-                g.SetPoint(iBin, x, 1)
+                g.SetPoint(iBin, x, 0)
             else:
                 g.SetPoint(iBin, x, 1)
                 if y > 0:
@@ -465,6 +495,8 @@ class HistogramSetup(HSSetters):
         plot them in first canvas and add errorbands
         add fractional ratio and difference ratio plot including errorbands
         '''
+        # remove all templates with zero integral
+        templates = self.removeZeroTemplates(templates)
 
         # figure out which processes in which order are included in the stack
         # lowest is first
@@ -480,7 +512,7 @@ class HistogramSetup(HSSetters):
         lineTemplates, lineHistograms, lineErrors = self.getLineTemplates(templates, stackIntegral)
 
         # get data
-        useData, dataLabel = self.getDataInfo(hasHistStack)
+        useData, dataLabel = self.getDataInfo(templates, hasHistStack)
         if useData:
             data = self.getData(templates)
 
@@ -498,7 +530,8 @@ class HistogramSetup(HSSetters):
             log         = self.logY,
             ratio       = doRatio,
             doubleRatio = doubleRatio,
-            sideLegend  = True
+            sideLegend  = True,
+            wideCanvas  = self.wideCanvas
             )
 
         # determine which errorbands to use
@@ -572,7 +605,6 @@ class HistogramSetup(HSSetters):
                 # draw errorband
                 lineErrors[line][syst].Draw("same2")
 
-
         if useData:
             # setup and draw data histogram
             self.setupDataHistogram(data)
@@ -583,8 +615,16 @@ class HistogramSetup(HSSetters):
         if hasHistStack:
             stackedHistograms[-1].Draw("axissame")
 
+        # draw grid
+        if self.grid:
+            c.cd(1).SetGridx()
+        
         # setup legend
-        l = ROOT.TLegend(0.81,0.93*(1.-nLegendEntries/14.),0.98,0.93)
+        if doRatio:
+            l = ROOT.TLegend(0.81,0.93*(1.-min(1., nLegendEntries/14.)),0.98,0.93)
+        else:
+            l = ROOT.TLegend(0.81,0.93*(1.-min(0.85, nLegendEntries/14.)),0.98,0.93)
+            
         l.SetBorderSize(0)
         # add data entry
         if useData:
@@ -644,6 +684,8 @@ class HistogramSetup(HSSetters):
             # redraw the line and data
             line.DrawCopy("histo same")
             r.DrawCopy("sameP")
+            if self.grid:
+                c.cd(fracIdx).SetGridx()
 
         # build fractional ratio
         if self.differenceRatio:
@@ -658,7 +700,8 @@ class HistogramSetup(HSSetters):
 
             # set ratio range
             dline.GetYaxis().SetRangeUser(
-                1.5*max(dMin, -0.2*dMax), 1.5*max(dMax, -0.2*dMin))
+                min(-0.25*dMax, 1.5*min(dMin,0.)), 
+                max( 0.25*dMin, 1.5*max(dMax,0.)))
 
             # draw ratio line
             dline.DrawCopy("histo")
@@ -683,14 +726,18 @@ class HistogramSetup(HSSetters):
             # redraw the line and data
             dline.DrawCopy("histo same")
             d.Draw("sameP")
-
+            if self.grid:
+                c.cd(diffIdx).SetGridx()
 
         # add some labels
-        ps.printCMSLabel(c, privateWork = self.privateWork, ratio = doRatio)
+        ps.printCMSLabel(c, privateWork = self.privateWork, 
+            ratio = doRatio, wideCanvas = self.wideCanvas)
         if not lumi is None:
-            ps.printLumiLabel(c, lumi = lumi, ratio = doRatio, sideLegend = True)
+            ps.printLumiLabel(c, lumi = lumi, 
+                ratio = doRatio, sideLegend = True, wideCanvas = self.wideCanvas)
         if not channelLabel is None:
-            ps.printChannelLabel(c, channelLabel, ratio = doRatio)
+            ps.printChannelLabel(c, channelLabel, 
+                ratio = doRatio, wideCanvas = self.wideCanvas)
            
         # save output
         c.SaveAs(outFile)

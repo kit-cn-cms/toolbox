@@ -3,15 +3,21 @@ import ROOT
 def getCanvas(name = "canvas", 
     log = False, pulls = False, 
     ratio = False, doubleRatio = False, 
-    twodim = False, sideLegend = False):
+    twodim = False, sideLegend = False,
+    wideCanvas = False):
     x = 0
     r = 0
+    w = 0
+    l = 0
     if sideLegend:
         x = 256
         r = 0.15
+    if wideCanvas:
+        w = 768
+        l = -0.05
     # generate canvas
     if doubleRatio:
-        canvas = ROOT.TCanvas(name, name, 1024+x, 1280)
+        canvas = ROOT.TCanvas(name, name, 1024+x+w, 1280)
         canvas.Divide(1,3)
         canvas.cd(1).SetPad(0., 0.4, 1.0, 1.0)
         canvas.cd(1).SetTopMargin(0.07)
@@ -29,15 +35,15 @@ def getCanvas(name = "canvas",
         canvas.cd(2).SetRightMargin(0.05+r)
         canvas.cd(3).SetRightMargin(0.05+r)
 
-        canvas.cd(1).SetLeftMargin(0.15)
-        canvas.cd(2).SetLeftMargin(0.15)
-        canvas.cd(3).SetLeftMargin(0.15)
+        canvas.cd(1).SetLeftMargin(0.15+l)
+        canvas.cd(2).SetLeftMargin(0.15+l)
+        canvas.cd(3).SetLeftMargin(0.15+l)
 
         canvas.cd(1).SetTicks(1,1)
         canvas.cd(2).SetTicks(1,1)
         canvas.cd(3).SetTicks(1,1)
     elif ratio:
-        canvas = ROOT.TCanvas(name, name, 1024+x, 1024)
+        canvas = ROOT.TCanvas(name, name, 1024+x+w, 1024)
         canvas.Divide(1,2)
         canvas.cd(1).SetPad(0.,0.3,1.0,1.0)
         canvas.cd(1).SetTopMargin(0.07)
@@ -48,11 +54,11 @@ def getCanvas(name = "canvas",
         canvas.cd(2).SetBottomMargin(0.4)
 
         canvas.cd(1).SetRightMargin(0.05+r)
-        canvas.cd(1).SetLeftMargin(0.15)
+        canvas.cd(1).SetLeftMargin(0.15+l)
         canvas.cd(1).SetTicks(1,1)
 
         canvas.cd(2).SetRightMargin(0.05+r)
-        canvas.cd(2).SetLeftMargin(0.15)
+        canvas.cd(2).SetLeftMargin(0.15+l)
         canvas.cd(2).SetTicks(1,1)
     elif twodim:
         canvas = ROOT.TCanvas(name, name, 1024+x, 1024)
@@ -61,14 +67,14 @@ def getCanvas(name = "canvas",
         canvas.SetTopMargin(0.2)   
         canvas.SetRightMargin(0.2+r)
     else:
-        canvas = ROOT.TCanvas(name, name, 1024+x, 768)
+        canvas = ROOT.TCanvas(name, name, 1024+x+w, 768)
         canvas.SetTopMargin(0.07)
         if not pulls:
             canvas.SetBottomMargin(0.15)
         if pulls:
             canvas.SetBottomMargin(0.25)
         canvas.SetRightMargin(0.05+r)
-        canvas.SetLeftMargin(0.15)
+        canvas.SetLeftMargin(0.15+l)
         canvas.SetTicks(1,1)
 
     if log: canvas.cd(1).SetLogy()
@@ -106,7 +112,7 @@ def getLegend(pulls = False, ratio = False):
         legend.SetFillStyle(0)
     return legend
 
-def printChannelLabel(pad, channelLabel, ratio = True):
+def printChannelLabel(pad, channelLabel, ratio = True, wideCanvas = False):
     pad.cd(1)
     l = pad.GetLeftMargin()
     t = pad.GetTopMargin()
@@ -116,11 +122,17 @@ def printChannelLabel(pad, channelLabel, ratio = True):
     latex = ROOT.TLatex()
     latex.SetNDC()
     latex.SetTextColor(ROOT.kBlack)
+    
+    x = 0.
+    y = 0.
+    if ratio:
+        x+= 0.05
+        y+= 0.02
+    if wideCanvas and ratio:
+        x+=-0.06
+    latex.DrawLatex(l+0.04+x,1.-t-0.08+y, channelLabel)
 
-    if ratio: latex.DrawLatex(l+0.09,1.-t-0.06, channelLabel)
-    else:     latex.DrawLatex(l+0.04,1.-t-0.08, channelLabel)
-
-def printCMSLabel(pad, privateWork = True, ratio = True):
+def printCMSLabel(pad, privateWork = True, ratio = True, wideCanvas = False):
     pad.cd(1)
     l = pad.GetLeftMargin()
     t = pad.GetTopMargin()
@@ -134,11 +146,16 @@ def printCMSLabel(pad, privateWork = True, ratio = True):
 
     text = "CMS"
     if privateWork: text += " #bf{#it{private work}}"
+    x = 0.
+    y = 0.
+    if ratio:
+        x+=0.04
+        y+=0.03
+    if wideCanvas:
+        x+=-0.07
+    latex.DrawLatex(l+0.06+x,1.-t+0.01+y, text)
 
-    if ratio: latex.DrawLatex(l+0.1, 1.-t+0.04, text)
-    else:     latex.DrawLatex(l+0.06,1.-t+0.01, text)
-
-def printLumiLabel(pad, lumi, ratio = True, sideLegend = False):
+def printLumiLabel(pad, lumi, ratio = True, sideLegend = False, wideCanvas = False):
     pad.cd(1)
     l = pad.GetLeftMargin()
     t = pad.GetTopMargin()
@@ -155,7 +172,8 @@ def printLumiLabel(pad, lumi, ratio = True, sideLegend = False):
         offset = 0.12
     elif sideLegend and not ratio:
         offset = 0.02
-            
+    if wideCanvas:
+        offset-= 0.05        
     if ratio: latex.DrawLatex(1.-r-0.15-offset,1.-t+0.04, text)
     else:     latex.DrawLatex(1.-r-0.15-offset,1.-t+0.01, text)
 
