@@ -222,7 +222,10 @@ class HistogramSetup(HSSetters):
         '''
         yMax = 0.
         yMinMax = 1e10
-        for h in [stackedHistograms[-1]]+lineHistograms.values():
+        hists = lineHistograms.values()
+        if len(stackedHistograms) > 0:
+            hists.append(stackedHistograms[-1])
+        for h in hists:
             yMax =    max(yMax, h.GetBinContent(h.GetMaximumBin()))
             yMinMax = min(yMinMax, h.GetBinContent(h.GetMaximumBin()))
         if self.logY:   
@@ -648,7 +651,7 @@ class HistogramSetup(HSSetters):
         l.Draw()
             
         # build fractional ratio
-        if self.ratio:
+        if self.ratio and doRatio:
             c.cd(fracIdx)
     
             # get line 
@@ -688,7 +691,7 @@ class HistogramSetup(HSSetters):
                 c.cd(fracIdx).SetGridx()
 
         # build fractional ratio
-        if self.differenceRatio:
+        if self.differenceRatio and doRatio:
             c.cd(diffIdx)
 
             # get line
