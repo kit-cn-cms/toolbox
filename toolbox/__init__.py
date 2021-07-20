@@ -19,3 +19,4 @@ import plotSetup
 
 from harryPlotter.harryPlotter import HarryPlotter
 from harryPlotter.HistogramSetup import HistogramSetup
+from harryPlotter.twoDimPlotter import plotTwoDim
