@@ -52,6 +52,7 @@ class HSSetters:
         self.setPlotInStack()
         self.setPlotAsBoth()
         self.setDontPlot()
+        self.setOnlyPlot()
 
         self.setLogY()
         self.setUseRealData()
@@ -141,6 +142,19 @@ class HSSetters:
                 self.includeOnly = [
                     io for io in self.includeOnly if not io == p]
     
+    def setOnlyPlot(self, processes = None):
+        if processes is None: return
+        
+        for p in self.plotAsLine:
+            if not p in processes:
+                self.plotAsLine.pop(p)
+
+        self.includeOnly = [p for p in self.includeOnly if p in processes]
+
+        for p in processes:
+            if not p in self.includeOnly:
+                self.includeOnly.append(p)
+
     def setLogY(self, logY = False):
         self.logY = logY
 

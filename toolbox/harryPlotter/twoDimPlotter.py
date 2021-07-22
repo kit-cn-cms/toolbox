@@ -4,7 +4,7 @@ import ROOT
 
 def plotTwoDim(inputFile, inputTemplate, outputPath, 
         xLabel = None, yLabel = None, plotLabel = None, processLabel = None,
-        addBinLabels = False, logY = False, zRange = None, palette = None):
+        addBinLabels = None, logY = False, zRange = None, palette = None):
     printer.printAction("creating two dimensional plot of {}".format(inputTemplate))
     
     c = p.getCanvas(name = inputTemplate, twodim = True)
@@ -30,8 +30,8 @@ def plotTwoDim(inputFile, inputTemplate, outputPath,
     t.Draw("colz text1")
     if not plotLabel is None:
         p.printChannelLabel(c, plotLabel, ratio = False)
-    if addBinLabels:
-        ROOT.gStyle.SetPaintTextFormat(".3f")
+    if not addBinLabels is None:
+        ROOT.gStyle.SetPaintTextFormat(addBinLabels)
         t.SetMarkerColor(ROOT.kBlack)
         t.SetMarkerSize(1.5)
     if not zRange is None:

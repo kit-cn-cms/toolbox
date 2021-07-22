@@ -47,7 +47,9 @@ class HistogramSetup(HSSetters):
             orderedTemplates.reverse()
 
         # append the processes predefined by plottingOrder
-        orderedTemplates+=self.plottingOrder
+        plottingOrder    = [p for p in self.plottingOrder if p in stackTemplates]
+        orderedTemplates = [p for p in orderedTemplates if not p in plottingOrder]
+        orderedTemplates+= plottingOrder
 
         # returns list of processes. first process is lowest in stack
         return orderedTemplates
@@ -352,6 +354,61 @@ class HistogramSetup(HSSetters):
 
         return errorbands
 
+    def divideBinEntries(self, 
+            stackedHistograms, stackErrors, 
+            lineHistograms, lineErrors, 
+            data = None):
+        '''
+        divide all entries by bin widths
+        '''
+        # get bin widths
+        if len(stackedHistograms) > 0:
+            h = stackedHistograms[-1]
+        elif len(lineHistograms.keys()) > 0:
+            h = lineHistograms[lineHistograms.keys()[0]]
+        else:
+            h = data
+        widths = [h.GetBinLowEdge(iBin+2)-h.GetBinLowEdge(iBin+1) for iBin in range(h.GetNbinsX())]
+
+        # divide stacked histograms
+        for h in stackedHistograms:
+            for iBin in range(h.GetNbinsX()):
+                h.SetBinContent(iBin+1, h.GetBinContent(iBin+1)/widths[iBin])
+                h.SetBinError(iBin+1,   h.GetBinError(iBin+1)/widths[iBin])
+            
+        # divide stacked errors
+        for key in stackErrors:
+            for iBin in range(stackErrors[key].GetN()):
+                stackErrors[key].SetPointY(iBin, stackErrors[key].GetPointY(iBin)/widths[iBin])
+                stackErrors[key].SetPointEYhigh(iBin, 
+                    stackErrors[key].GetErrorYhigh(iBin)/widths[iBin])
+                stackErrors[key].SetPointEYlow(iBin, 
+                    stackErrors[key].GetErrorYlow(iBin)/widths[iBin])
+
+        # divide lines
+        for key in lineHistograms:
+            for iBin in range(lineHistograms[key].GetNbinsX()):
+                lineHistograms[key].SetBinContent(iBin+1,
+                    lineHistograms[key].GetBinContent(iBin+1)/width[iBin])
+                lineHistograms[key].SetBinError(iBin+1,
+                    lineHistograms[key].GetBinError(iBin+1)/width[iBin])
+
+        # divide line errors
+        for key in lineErrors:
+            for syst in lineErrors[key]:
+                for iBin in range(lineErrors[key][syst].GetN()):
+                    lineErrors[key][syst].SetPointY(iBin,
+                        lineErrors[key][syst].GetPointY(iBin)/widths[iBin])
+                    lineErrors[key][syst].SetPointEYhigh(iBin,
+                        lineErrors[key][syst].GetErrorYhigh(iBin)/widths[iBin])
+                    lineErrors[key][syst].SetPointEYlow(iBin,
+                        lineErrors[key][syst].GetErrorYlow(iBin)/widths[iBin])
+
+        if not data is None:
+            for iBin in range(data.GetNbinsX()):
+                data.SetBinContent(iBin+1, data.GetBinContent(iBin+1)/widths[iBin])
+                data.SetBinError(iBin+1,   data.GetBinError(iBin+1)/widths[iBin])
+        
     def setupErrorband(self, g, syst, line = False, processColor = None):
         '''
         get style in which errorband should be drawn
@@ -516,11 +573,9 @@ class HistogramSetup(HSSetters):
 
         # get data
         useData, dataLabel = self.getDataInfo(templates, hasHistStack)
+        data = None
         if useData:
             data = self.getData(templates)
-
-        # get plotting range 
-        yMin, yMax = self.getPlotRange(stackedHistograms, lineHistograms)
 
         # get info about ratios
         doRatio, doubleRatio, fracIdx, diffIdx = self.getRatioInfo(useData)
@@ -540,6 +595,14 @@ class HistogramSetup(HSSetters):
         # determine which errorbands to use
         errorbands = self.getListOfErrorbands(
             hasHistStack, stackTemplates, lineTemplates, templates)
+
+        # divide by bin width if activated
+        if divideByBinWidth:
+            self.divideBinEntries(
+                stackedHistograms, stackErrors, lineHistograms, lineErrors, data)
+
+        # get plotting range 
+        yMin, yMax = self.getPlotRange(stackedHistograms, lineHistograms)
 
         # plot stack histograms on canvas
         c.cd(1)
