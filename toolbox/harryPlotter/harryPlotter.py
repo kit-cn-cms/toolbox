@@ -96,17 +96,20 @@ class HarryPlotter(HPSetters):
             systs.set_index("Uncertainty", drop = True, inplace = True)
             systs = systs.to_dict()["SysGroup"]
 
-            self.templates[proc] = Template(
+            template = Template(
                 procName = proc,
                 systDict = systs
                 )
-            self.templates[proc].loadTemplates(self)
+            success = template.loadTemplates(self)
+            if success:
+                self.templates[proc] = template
 
         if not self.dataName is None:
-            self.templates[self.dataName] = Template(
-                procName = self.dataName,
-                isData   = True)
-            self.templates[self.dataName].loadTemplates(self)
+            if self.dataName in self.templates:
+                self.templates[self.dataName] = Template(
+                    procName = self.dataName,
+                    isData   = True)
+                self.templates[self.dataName].loadTemplates(self)
 
     def loadFromROOTFile(self):
         '''
@@ -152,10 +155,14 @@ class HarryPlotter(HPSetters):
                 continue
             ogTemplates.append(self.templates[ogName])
 
-        # build new template
-        self.templates[targetName] = Template.mergeTemplates(
-            targetName     = targetName,
-            inputTemplates = ogTemplates)
+        if len(ogTemplates) > 0:
+            # build new template
+            self.templates[targetName] = Template.mergeTemplates(
+                targetName     = targetName,
+                inputTemplates = ogTemplates)
+        else:
+            printer.printError("\t not adding merged process {} because no inputs were found".format(
+                targetName))
 
 
     def loadErrorbands(self):

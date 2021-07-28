@@ -26,15 +26,15 @@ class Template:
        
         # if systDict is passed load systs directly with SysGroup
         if not systDict is None:
-            for sys in systDict:
-                self.systs[sys] = systDict[sys]
-                self.allGroups.update([systDict[sys]])
-                self.majorSystGroups.update([systDict[sys]])
+            for syst in systDict:
+                self.systs[syst] = systDict[syst]
+                self.allGroups.update([systDict[syst]])
+                self.majorSystGroups.update([systDict[syst]])
         # if only a list of systematics is passed all are 
         # per default put in "syst" list
         elif not systList is None:
-            for sys in systList:
-                self.systs[sys] = "syst"
+            for syst in systList:
+                self.systs[syst] = "syst"
                 self.allGroups.update(["syst"])
                 self.majorSystGroups.update(["syst"])
 
@@ -73,15 +73,15 @@ class Template:
                 t.nom.Add(inputTemplate.nom.Clone())
 
             # add systematic templates
-            for sys in inputTemplate.systs:    
-                if not sys in t.up:
-                    t.up[sys] = inputTemplate.up[sys].Clone()
+            for syst in inputTemplate.systs:    
+                if not syst in t.up:
+                    t.up[syst] = inputTemplate.up[syst].Clone()
                 else:
-                    t.up[sys].Add(inputTemplate.up[sys].Clone())
-                if not sys in t.dn:
-                    t.dn[sys] = inputTemplate.dn[sys].Clone()
+                    t.up[syst].Add(inputTemplate.up[syst].Clone())
+                if not syst in t.dn:
+                    t.dn[syst] = inputTemplate.dn[syst].Clone()
                 else:
-                    t.dn[sys].Add(inputTemplate.dn[sys].Clone())
+                    t.dn[syst].Add(inputTemplate.dn[syst].Clone())
 
             inputTemplate.partOfMerged = True
 
@@ -99,35 +99,38 @@ class Template:
         '''
         load all the templates from the input files 
         '''
-        if self.loaded: return
+        if self.loaded: return True
 
         # load templates from rootfile
         nomKeyName = hp.GetNomKeyName(self.procName, hp.channelName)
         if not hp.rf.GetListOfKeys().Contains(nomKeyName):
             printer.printWarning("key {} does not exist".format(nomKeyName))
             self.error = True
+            return False
 
         self.nom = hp.rf.Get(nomKeyName)
+        print(self.nom)
 
         # load varied templates
         self.up = {}
         self.dn = {}
-        for sys in self.systs:
+        for syst in self.systs:
             # load up and down variations
-            upKeyName = hp.GetSysKeyName(self.procName, hp.channelName, sys+"Up")
-            dnKeyName = hp.GetSysKeyName(self.procName, hp.channelName, sys+"Down")
+            upKeyName = hp.GetSysKeyName(self.procName, hp.channelName, syst+"Up")
+            dnKeyName = hp.GetSysKeyName(self.procName, hp.channelName, syst+"Down")
             if not hp.rf.GetListOfKeys().Contains(upKeyName):
                 printer.printWarning("sys key {} does not exist".format(upKeyName))
                 self.error = True
             if not hp.rf.GetListOfKeys().Contains(dnKeyName):
                 printer.printWarning("sys key {} does not exist".format(dnKeyName))
                 self.error = True
-            self.up[sys] = hp.rf.Get(upKeyName)
-            self.dn[sys] = hp.rf.Get(dnKeyName)
+            self.up[syst] = hp.rf.Get(upKeyName)
+            self.dn[syst] = hp.rf.Get(dnKeyName)
         
         if self.error:
             sys.exit()
         self.loaded = True
+        return True
 
     def modifyTemplates(self, hp):
         '''
@@ -142,13 +145,13 @@ class Template:
         if hp.divideByBinWidth:
             hpUtil.divideByBinWidth(self.nom)
     
-        for sys in self.systs:
+        for syst in self.systs:
             if hp.moveOverflow:
-                hpUtil.moveOverflow(self.up[sys])
-                hpUtil.moveOverflow(self.dn[sys])
+                hpUtil.moveOverflow(self.up[syst])
+                hpUtil.moveOverflow(self.dn[syst])
             if hp.divideByBinWidth:
-                hpUtil.divideByBinWidth(self.up[sys])
-                hpUtil.divideByBinWidth(self.dn[sys])
+                hpUtil.divideByBinWidth(self.up[syst])
+                hpUtil.divideByBinWidth(self.dn[syst])
 
 
     def loadErrorbands(self, addStatErrorband = True, linear = False):
@@ -165,10 +168,10 @@ class Template:
         self.dnValues = {}
     
         # loop over systematics
-        for sys in self.systs:
+        for syst in self.systs:
 
             # check which group the systematic belongs to
-            group = self.systs[sys]
+            group = self.systs[syst]
             # initialize group if it doesnt exist yet
             if not group in self.upValues:
                 self.upValues[group] = np.zeros(self.nom.GetNbinsX())
@@ -177,8 +180,8 @@ class Template:
 
             # loop over bins and get residuals
             for iBin in range(self.nom.GetNbinsX()):
-                uRes = self.up[sys].GetBinContent(iBin+1) - self.nom.GetBinContent(iBin+1)
-                dRes = self.dn[sys].GetBinContent(iBin+1) - self.nom.GetBinContent(iBin+1)
+                uRes = self.up[syst].GetBinContent(iBin+1) - self.nom.GetBinContent(iBin+1)
+                dRes = self.dn[syst].GetBinContent(iBin+1) - self.nom.GetBinContent(iBin+1)
                 # figure out which of these goes up and which goes down
                 u = max(uRes, dRes)
                 d = min(uRes, dRes)
