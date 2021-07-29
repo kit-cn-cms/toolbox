@@ -113,7 +113,7 @@ class HistogramSetup(HSSetters):
         '''
         if self.realData:
             printer.printInfo("\tloading real data histogram")
-            data = templates["data_obs"].nom.Clone()
+            data = templates[self.dataName].nom.Clone()
             return data
 
         else:
@@ -242,8 +242,9 @@ class HistogramSetup(HSSetters):
         # determine if data is used
         # data will not be used of there is no stack of histograms
         useData = ((not self.plotBlind) and histStack)
-        if self.realData and not "data_obs" in templates:
-            printer.printWarning("\tno data_obs template available for data")
+        if self.realData and not self.dataName in templates:
+            printer.printWarning(
+                "\tno {} template available for data".format(self.dataName))
             useData = False
 
         # get data label    
@@ -546,6 +547,10 @@ class HistogramSetup(HSSetters):
 
 
 
+
+    # =================================
+    # MAIN FUNCTION
+    # =================================
 
     def drawHistogram(self, plotName, xLabel, channelLabel, lumi, 
             divideByBinWidth, outFile, templates):

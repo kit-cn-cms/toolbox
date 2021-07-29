@@ -42,6 +42,9 @@ class HarryPlotter(HPSetters):
         # list of histogram setups
         self.histogramSetups = []
 
+        # initialize name of data histogram
+        self.dataName = None
+
     def loadFromDatacard(self):
         '''
         Load all the information from datacard input
@@ -105,7 +108,7 @@ class HarryPlotter(HPSetters):
                 self.templates[proc] = template
 
         if not self.dataName is None:
-            if self.dataName in self.templates:
+            if not self.dataName in self.templates:
                 self.templates[self.dataName] = Template(
                     procName = self.dataName,
                     isData   = True)
@@ -216,6 +219,10 @@ class HarryPlotter(HPSetters):
             outFile = self.outputFile
             if not setup.nameTag == "default":
                 outFile = outFile.replace(".pdf", "_{}.pdf".format(setup.nameTag))
+
+            # set data name for setup
+            if not self.dataName is None:
+                setup.setDataName(self.dataName)
 
             # call drawing routine
             setup.drawHistogram(

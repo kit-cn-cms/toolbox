@@ -78,6 +78,9 @@ class HSSetters:
 
         self.setSumSystsBetweenProcesses()
 
+    def setDataName(self, name):
+        self.dataName = name
+
     def __str__(self):
         printer.printAction("\t==== Histogram Setup Summary ====")
         printer.printInfo("\tPlottingOrder:        {}".format(self.plottingOrder))
