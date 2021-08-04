@@ -25,7 +25,16 @@ def checkFile(f, treeName = None):
 
     if debugFileCheck: print("1")
     rf = ROOT.TFile.Open(f)
-    if rf is None or len(rf.GetListOfKeys()) == 0 or rf.TestBit(ROOT.TFile.kZombie):
+    if rf is None:
+        return False
+
+    if not rf:
+        return False
+
+    if rf.TestBit(ROOT.TFile.kZombie):
+        return False
+
+    if len(rf.GetListOfKeys()) == 0:
         return False
 
     if debugFileCheck: print("2")
