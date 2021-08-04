@@ -39,12 +39,12 @@ def getHistColor(name):
 
 
 errorbandStyles = {
-    "stat":         (1001, ROOT.kBlack,    0.3),
-    "syst":         (1001, ROOT.kBlack,    0.3),
+    "stat":         (1001, ROOT.kGray,     0.4),
+    "syst":         (1001, ROOT.kBlack,    0.4),
     "experimental": (1001, ROOT.kRed,      0.3),
     "theo":         (1001, ROOT.kBlue,     0.3),
 
-    "btag":         (3254, ROOT.kGreen+2,  1.0),
+    "btag":         (3145, ROOT.kRed+1,    0.7),
     "jec":          (3145, ROOT.kOrange+1, 1.0),
     "qcdscale":     (3472, ROOT.kGray+2,   1.0),
     "ps":           (3227, ROOT.kBlue+1,   1.0),

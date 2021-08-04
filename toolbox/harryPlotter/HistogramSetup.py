@@ -353,7 +353,10 @@ class HistogramSetup(HSSetters):
 
         if self.statError:
             errorbands = list(errorbands)
-            errorbands.append("stat")
+            errorbands = ["stat"] + errorbands
+
+        if "syst+stat" in errorbands:
+            errorbands = ["syst+stat"] + [e for e in errorbands if not e == "syst+stat"]
 
         return errorbands
 
