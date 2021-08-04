@@ -12,6 +12,8 @@ class HistogramSetup(HSSetters):
     def removeZeroTemplates(self, templates):
         newTemplates = {}
         for t in templates:
+            if not hasattr(templates[t], "nom"):
+                continue
             if templates[t].nom.Integral() == 0:    
                 continue
             newTemplates[t] = templates[t]

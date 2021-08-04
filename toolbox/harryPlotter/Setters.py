@@ -148,9 +148,11 @@ class HSSetters:
     def setOnlyPlot(self, processes = None):
         if processes is None: return
         
+        plotAsLine = {}
         for p in self.plotAsLine:
-            if not p in processes:
-                self.plotAsLine.pop(p)
+            if p in processes:
+                plotAsLine[p] = self.plotAsLine[p]
+        self.plotAsLine = plotAsLine
 
         self.includeOnly = [p for p in self.includeOnly if p in processes]
 
