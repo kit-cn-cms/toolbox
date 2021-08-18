@@ -23,6 +23,7 @@ Requirements = ( OpSysAndVer == "CentOS7" )
 RequestMemory = {memory}
 RequestDisk = {disk}
 +RequestRuntime = {runtime}
+Request_Cpus = {ncores}
 JobBatchName = {batchname}
 """
 
@@ -44,14 +45,14 @@ requirements = TARGET.ProvidesIO && TARGET.ProvidesEKPResources
 docker_image = mschnepf/slc7-condocker
 """
 
-def submitToBatch(workdir, list_of_shells, memory_ = "1000", disk_ = "1000000", runtime_ = "43200", use_proxy = False, proxy_dir_ = "", name_ = ""):
+def submitToBatch(workdir, list_of_shells, memory_ = "1000", disk_ = "1000000", runtime_ = "43200", ncores_ = "1", use_proxy = False, proxy_dir_ = "", name_ = ""):
     ''' submit the list of shell script to the NAF batch system '''
 
     # write array script for submission
     arrayScript = writeArrayScript(workdir, list_of_shells, name_)
 
     # write submit script for submission
-    submitScript = writeSubmitScript(workdir, arrayScript, len(list_of_shells), memory_, disk_, runtime_, use_proxy, proxy_dir_, name_)
+    submitScript = writeSubmitScript(workdir, arrayScript, len(list_of_shells), memory_, disk_, runtime_, ncores_, use_proxy, proxy_dir_, name_)
         
     # submit the whole thing
     jobID = condorSubmit( submitScript)
@@ -83,7 +84,7 @@ echo "$SGE_TASK_ID"
     return path
 
 
-def writeSubmitScript(workdir, arrayScript, nScripts, memory_, disk_, runtime_, use_proxy, proxy_dir_, name_):
+def writeSubmitScript(workdir, arrayScript, nScripts, memory_, disk_, runtime_, ncores_, use_proxy, proxy_dir_, name_):
     path = workdir+"/"+name_+"_submitScript.sub"
     logdir = workdir+"/logs"
     if not os.path.exists(logdir):
@@ -102,6 +103,7 @@ def writeSubmitScript(workdir, arrayScript, nScripts, memory_, disk_, runtime_, 
         disk = disk_,
         runtime = runtime_,
         name = name_,
+        ncores = ncores_,
         batchname = name_.replace(".txt",""))
 
     if use_proxy:
