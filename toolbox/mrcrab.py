@@ -148,7 +148,7 @@ class CrabResult:
         self.pubgroups = []
         pubstatus = self.query.split("Publication status")
         if len(pubstatus) == 2:
-            self.pubgroups = re.findall(self.__statusRegex, pubstatus)
+            self.pubgroups = re.findall(self.__statusRegex, pubstatus[1])
         return True
 
     def collect_groups(self):
@@ -178,7 +178,7 @@ class CrabResult:
                 self.njobs = totaljobs
             else:
                 if not self.njobs == totaljobs:
-                    printer.printError("{}, {}".format(info["njobs"], totaljobs))
+                    # printer.printError("{}, {}".format(info["njobs"], totaljobs))
                     printer.printError(
                         "ERROR: number of jobs doesnt match for project {}".format(self.name))
                     return False
