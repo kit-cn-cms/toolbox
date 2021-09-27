@@ -60,6 +60,8 @@ def checkFile(f, treeName = None):
             return False
         if nevts == 0:
             printer.printInfo("empty file {}".format(f))
+    else:
+        rf.Close()
 
     return True
 
