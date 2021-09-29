@@ -3,6 +3,7 @@ alias  fitpy='python -i    $TOOLBOX/scripts/fitpy.py'
 alias  dnnpy='python -i    $TOOLBOX/scripts/dnnpy.py'
 
 alias mrcrab='python       $TOOLBOX/scripts/mrcrab.py'
+alias yieldTable='python   $TOOLBOX/scripts/yieldTable.py'
 
 alias condorSubmit='python $TOOLBOX/scripts/condorSubmit.py'
 
