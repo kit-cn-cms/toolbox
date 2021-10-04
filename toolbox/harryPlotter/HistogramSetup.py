@@ -258,10 +258,14 @@ class HistogramSetup(HSSetters):
         return useData, dataLabel
 
 
-    def getRatioInfo(self, useData):
+    def getRatioInfo(self, useData, lineTemplates = {}):
         '''
         figure out of there is a ratio plot and which one
         also determine the canvas indices for the ratios
+
+        ratios are only activated if there either
+            - is a data process
+            - the lineRatios option is activated and there are lines
         '''
         doRatio     = False
         doubleRatio = False
@@ -270,7 +274,7 @@ class HistogramSetup(HSSetters):
         fracIdx = 2
         diffIdx = 3
 
-        if (self.ratio or self.differenceRatio) and useData:
+        if (self.ratio or self.differenceRatio) and (useData or (len(lineTemplates)>0 and self.lineRatios)):
             doRatio = True
             if self.ratio and self.differenceRatio:
                 doubleRatio = True
@@ -529,7 +533,51 @@ class HistogramSetup(HSSetters):
         r.SetMarkerStyle(20)
         ROOT.gStyle.SetErrorX(0)
         return r, rMin, rMax
-        
+
+    def getRatioLines(self, lineHistograms, lineErrors, stack, frac = True):
+        if frac:
+            rMax = 1
+            rMin = 1
+        else:
+            rMax = 0
+            rMin = 0
+
+        lineRatios = {}
+        # divide lines
+        for key in lineHistograms:
+            r = lineHistograms[key].Clone()
+            if frac: r.Divide(stack.Clone())
+            for iBin in range(r.GetNbinsX()):
+                if not frac:
+                    r.SetBinContent(iBin+1,
+                        (r.GetBinContent(iBin+1)-stack.GetBinContent(iBin+1)))
+                rMax = max(r.GetBinContent(iBin+1), rMax)
+                rMin = min(r.GetBinContent(iBin+1), rMin)
+            lineRatios[key] = r.Clone()                
+
+        # divide line errors
+        ratioErrors = {}
+        for key in lineErrors:
+            ratioErrors[key] = {}
+            for syst in lineErrors[key]:
+                g = lineErrors[key][syst].Clone()
+                for iBin in range(g.GetN()):
+                    x = g.GetPointX(iBin)
+                    y = g.GetPointY(iBin)
+                    # set central value to previous calculated line ratio value
+                    g.SetPoint(iBin, x, lineRatios[key].GetBinContent(iBin+1))
+                    # adjust the uncertainty sizes if it is a divide ratio
+                    if frac:
+                        if y > 0:
+                            g.SetPointEYlow( iBin,  g.GetErrorYlow(iBin)/y)
+                            g.SetPointEYhigh(iBin, g.GetErrorYhigh(iBin)/y)
+                        else:
+                            g.SetPointEYlow(iBin, 0)
+                            g.SetPointEYhigh(iBin, 0)
+                ratioErrors[key][syst] = g.Clone()
+         
+        return lineRatios, ratioErrors, rMin, rMax
+            
     def setupRatioErrorband(self, g, frac = True):
         '''
         setup errorband for ratio plot
@@ -588,7 +636,7 @@ class HistogramSetup(HSSetters):
             data = self.getData(templates)
 
         # get info about ratios
-        doRatio, doubleRatio, fracIdx, diffIdx = self.getRatioInfo(useData)
+        doRatio, doubleRatio, fracIdx, diffIdx = self.getRatioInfo(useData, lineTemplates)
 
         # get yTitle
         yTitle = self.getyTitle(divideByBinWidth, xLabel)
@@ -717,9 +765,14 @@ class HistogramSetup(HSSetters):
             l.AddEntry(stackedHistograms[idx], templates[proc].label, "F")
         # add uncertainty entries
         for syst in errorbands:
-            if not syst in stackErrors:
+            if syst in stackErrors:
+                l.AddEntry(stackErrors[syst], syst, "F")
                 continue
-            l.AddEntry(stackErrors[syst], syst, "F")
+            for line in lineErrors:
+                if syst in lineErrors[line]:
+                    l.AddEntry(lineErrors[line][syst], syst, "F")
+                    break
+                
         # draw legend
         l.Draw()
             
@@ -731,9 +784,20 @@ class HistogramSetup(HSSetters):
             line = self.getRatioLine(stackedHistograms[-1], True,
                 dataLabel, doubleRatio, xLabel)
 
-            # get data histogram 
-            r, rMin, rMax = self.getRatioData(data, stackedHistograms[-1], True)
-
+            # get data histogram
+            if useData:
+                r, rMin, rMax = self.getRatioData(data, stackedHistograms[-1], True)
+            # get line histograms
+            if self.lineRatios:
+                lineRatios, ratioLineErrors, lMin, lMax = self.getRatioLines(
+                    lineHistograms, lineErrors, stackedHistograms[-1], True)
+                if useData:
+                    rMin = min(rMin, lMin)
+                    rMax = max(rMax, lMax)
+                else:
+                    rMin = lMin
+                    rMax = lMax
+        
             # set ratio range
             line.GetYaxis().SetRangeUser(0.5, 1.5)
 
@@ -741,7 +805,8 @@ class HistogramSetup(HSSetters):
             line.DrawCopy("histo")
 
             # draw ratio data
-            r.DrawCopy("sameP")
+            if useData:
+                r.DrawCopy("sameP")
 
             # add errorbands
             ratioErrors = {}
@@ -757,9 +822,20 @@ class HistogramSetup(HSSetters):
                 # draw errorband
                 ratioErrors[syst].Draw("same2")
 
-            # redraw the line and data
+            # redraw the 1-line
             line.DrawCopy("histo same")
-            r.DrawCopy("sameP")
+
+            # draw the lines
+            if self.lineRatios:
+                for key in lineRatios:
+                    lineRatios[key].Draw("histo same")
+                    if self.errorbandOnLines:
+                        for syst in ratioLineErrors[key]:
+                            ratioLineErrors[key][syst].Draw("same2")
+
+            # redraw the data
+            if useData:
+                r.DrawCopy("sameP")
             if self.grid:
                 c.cd(fracIdx).SetGridx()
 
@@ -772,7 +848,18 @@ class HistogramSetup(HSSetters):
                 dataLabel, doubleRatio, xLabel)
 
             # get data histogram
-            d, dMin, dMax = self.getRatioData(data, stackedHistograms[-1], False)
+            if useData:
+                d, dMin, dMax = self.getRatioData(data, stackedHistograms[-1], False)
+            # get line histograms
+            if self.lineRatios:
+                lineRatios, ratioLineErrors, lMin, lMax = self.getRatioLines(
+                    lineHistograms, lineErrors, stackedHistograms[-1], False)
+                if useData:
+                    dMin = min(dMin, lMin)
+                    dMax = max(dMax, lMax)
+                else:
+                    dMin = lMin
+                    dMax = lMax
 
             # set ratio range
             dline.GetYaxis().SetRangeUser(
@@ -783,7 +870,8 @@ class HistogramSetup(HSSetters):
             dline.DrawCopy("histo")
 
             # draw ratio data
-            d.DrawCopy("sameP")
+            if useData:
+                d.DrawCopy("sameP")
         
             # add errorbands
             diffErrors = {}
@@ -799,9 +887,20 @@ class HistogramSetup(HSSetters):
                 # draw errorband
                 diffErrors[syst].Draw("same2")
 
-            # redraw the line and data
+            # redraw the 0-line
             dline.DrawCopy("histo same")
-            d.Draw("sameP")
+
+            # draw the lines
+            if self.lineRatios:
+                for key in lineRatios:
+                    lineRatios[key].Draw("histo same")
+                    if self.errorbandOnLines:
+                        for syst in ratioLineErrors[key]:
+                            ratioLineErrors[key][syst].Draw("same2")
+
+            # redraw the data
+            if useData:
+                d.Draw("sameP")
             if self.grid:
                 c.cd(diffIdx).SetGridx()
 

@@ -67,6 +67,7 @@ class HSSetters:
         self.setErrorbandOnLines()
         self.setScaleLineErrors()
         self.setOnlyPlotErrorGroups()
+        self.setLineRatios()
 
         self.setRatio()
         self.setRatioLabel()
@@ -110,6 +111,7 @@ class HSSetters:
         printer.printInfo("\tAddDifferenceRatio:   {}".format(self.differenceRatio))
         if self.differenceRatio:
             printer.printInfo("\tDifferenceRatioLabel: {}".format(self.differenceRatioLabel))
+        printer.printInfo("\tlineRatios:           {}".format(self.lineRatios))
         printer.printInfo("\tWideCanvas:           {}".format(self.wideCanvas))
         printer.printInfo("\tGrid:                 {}".format(self.grid))
         return ""
@@ -196,6 +198,8 @@ class HSSetters:
     def setOnlyPlotErrorGroups(self, groups = None):
         self.onlyPlotErrorGroups = groups
 
+    def setLineRatios(self, val = False):
+        self.lineRatios = val
 
     def setRatio(self, val = True):
         self.ratio = val
