@@ -5,7 +5,7 @@ import re
 import optparse
 import time
 
-import toolbox.printer
+import toolbox.printer as printer
 
 
 def setup_crab_query_parser(parser):

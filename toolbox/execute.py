@@ -1,5 +1,5 @@
 import os
-import toolbox.printer
+import toolbox.printer as printer
 def execute(cmd):
     if isinstance(cmd, list):
         cmd = " ".join(cmd)

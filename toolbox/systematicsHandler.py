@@ -5,7 +5,7 @@ import os
 import sys
 import pandas as pd
 
-import toolbox.printer
+import toolbox.printer as printer
 
 #############################################################
 # adapted from pyroot-plotscripts/tools/utis/Systematics.py #
@@ -119,9 +119,9 @@ class SystematicsHandler:
         df.set_index("Uncertainty", drop = True, inplace = True)
         systInfo.update(df.to_dict()[process])
 
-        print(systInfo)
-        exit()
-
+        systInfo = {k: systInfo[k] for k in systInfo if not systInfo[k] == "-"}
+        if sysType == "shape":
+            systInfo = {k: systInfo[k] for k in systInfo if not systInfo[k] == "0"}
         return systInfo 
 
     def getProcessSystUpDown(self, process, systName):

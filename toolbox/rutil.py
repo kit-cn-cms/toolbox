@@ -2,7 +2,7 @@ import ROOT
 import re 
 import os
 
-import toolbox.printer
+import toolbox.printer as printer
 from toolbox.execute import execute 
 
 def chunks(l, n):

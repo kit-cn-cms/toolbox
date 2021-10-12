@@ -1,5 +1,5 @@
 import pandas as pd
-import toolbox.printer
+import toolbox.printer as printer
 
 def yieldTable(df, outputPath, axis = 0):
     """

@@ -9,7 +9,7 @@ import time
 import optparse
 import sys
 
-import toolbox.printer
+import toolbox.printer as printer
 
 submitTemplateNAF = """
 universe = vanilla
