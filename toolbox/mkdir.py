@@ -1,6 +1,6 @@
 import os
-import printer
 import shutil
+import toolbox.printer
 
 def mkdir(path, overwrite = False, versioning = False, subcall = False):
     if not os.path.isabs(path):
