@@ -3,7 +3,7 @@ import ROOT
 import sys
 import numpy as np
 from toolbox import printer
-import hpUtil
+from toolbox.harryPlotter import hpUtil
 
 class Template:
     '''

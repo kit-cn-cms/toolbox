@@ -9,8 +9,8 @@ import sys
 # by L. Reuter, P. Keicher and J.v.d.Linden                 #
 #############################################################
 
-from Template import Template
-from Setters import HPSetters
+from toolbox.harryPlotter.Template import Template
+from toolbox.harryPlotter.Setters import HPSetters
 
 from toolbox import printer
 

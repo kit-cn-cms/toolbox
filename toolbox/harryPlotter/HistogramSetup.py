@@ -5,8 +5,8 @@ import numpy as np
 
 from toolbox import printer
 from toolbox import plotSetup as ps
-import hpUtil
-from Setters import HSSetters
+from toolbox.harryPlotter import hpUtil
+from toolbox.harryPlotter.Setters import HSSetters
 
 class HistogramSetup(HSSetters):
     def removeZeroTemplates(self, templates):
