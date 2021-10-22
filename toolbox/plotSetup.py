@@ -132,7 +132,8 @@ def printChannelLabel(pad, channelLabel, ratio = True, wideCanvas = False):
         x+=-0.06
     latex.DrawLatex(l+0.04+x,1.-t-0.08+y, channelLabel)
 
-def printCMSLabel(pad, privateWork = True, ratio = True, wideCanvas = False):
+def printCMSLabel(pad, privateWork = True, plotLabel = "private work", 
+        ratio = True, wideCanvas = False):
     pad.cd(1)
     l = pad.GetLeftMargin()
     t = pad.GetTopMargin()
@@ -145,7 +146,7 @@ def printCMSLabel(pad, privateWork = True, ratio = True, wideCanvas = False):
     latex.SetTextSize(0.04)
 
     text = "CMS"
-    if privateWork: text += " #bf{#it{private work}}"
+    if privateWork: text += " #bf{#it{"+plotLabel+"}}"
     x = 0.
     y = 0.
     if ratio:

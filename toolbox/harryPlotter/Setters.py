@@ -60,7 +60,8 @@ class HSSetters:
         self.setDataLabel()
         self.setPseudodataLabel()
         self.setPrivateWork()
-    
+        self.setPlotLabel()
+
         self.setPlotBlind()
         self.setStatError()
         self.setRemoveSystErrors()
@@ -98,7 +99,8 @@ class HSSetters:
                 printer.printInfo("\tPseudodataLabel:      {}".format(self.pseudodataLabel))
             else:
                 printer.printInfo("\tDataLabel:            {}".format(self.dataLabel))
-        printer.printInfo("\tPrivateWork:          {}".format(self.privateWork))
+        if self.privateWork:
+            printer.printInfo("\tPlotLabel:            {}".format(self.plotLabel))
         printer.printInfo("\tAddStatError:         {}".format(self.statError))
         printer.printInfo("\tRemoveSystErrors:     {}".format(self.removeSystErrors))
         if self.statError or not self.removeSystErrors:
@@ -179,6 +181,9 @@ class HSSetters:
 
     def setPrivateWork(self, val = True):
         self.privateWork = val
+
+    def setPlotLabel(self, val = "private work"):
+        self.plotLabel = val
 
     def setPlotBlind(self, val = False):
         self.plotBlind = val

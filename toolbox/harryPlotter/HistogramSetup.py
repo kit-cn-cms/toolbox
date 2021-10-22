@@ -905,7 +905,10 @@ class HistogramSetup(HSSetters):
                 c.cd(diffIdx).SetGridx()
 
         # add some labels
-        ps.printCMSLabel(c, privateWork = self.privateWork, 
+        cmsLabel = ""
+        if self.privateWork:
+            cmsLabel = self.plotLabel
+        ps.printCMSLabel(c, plotLabel = self.plotLabel, 
             ratio = doRatio, wideCanvas = self.wideCanvas)
         if not lumi is None:
             ps.printLumiLabel(c, lumi = lumi, 
