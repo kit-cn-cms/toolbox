@@ -105,6 +105,7 @@ class HSSetters:
         printer.printInfo("\tRemoveSystErrors:     {}".format(self.removeSystErrors))
         if self.statError or not self.removeSystErrors:
             printer.printInfo("\tErrorbandOnLines:     {}".format(self.errorbandOnLines))
+            printer.printInfo("\tEnabledLineErrors:     {}".format(self.enabledLineErrors))
             printer.printInfo("\tScaleLineErrors:      {}".format(self.scaleLineErrors))
             printer.printInfo("\tOnlyPlotErrorGroups:  {}".format(self.onlyPlotErrorGroups))
         printer.printInfo("\tAddRatio:             {}".format(self.ratio))
@@ -199,6 +200,9 @@ class HSSetters:
 
     def setScaleLineErrors(self, val = True):
         self.scaleLineErrors = val
+    def setEnabledLineErrors(self, val = []):
+        self.enabledLineErrors = val
+
 
     def setOnlyPlotErrorGroups(self, groups = None):
         self.onlyPlotErrorGroups = groups

@@ -90,6 +90,8 @@ class HistogramSetup(HSSetters):
                 errorScale = 1.
             # loop over systematics 
             for sys in templates[proc].upValues:
+                if not sys in self.enabledLineErrors and not self.enabledLineErrors == []:
+                    continue
                 lineErrors[proc][sys] = ROOT.TGraphAsymmErrors(lineHistograms[proc].Clone())
                 for iBin in range(lineHistograms[proc].GetNbinsX()):
                     lineErrors[proc][sys].SetPointEYlow( 
@@ -222,7 +224,7 @@ class HistogramSetup(HSSetters):
 
     def getPlotRange(self, stackedHistograms, lineHistograms):
         ''' 
-        determine x-axis plot range
+        determine y-axis plot range
         '''
         yMax = 0.
         yMinMax = 1e10
@@ -232,8 +234,9 @@ class HistogramSetup(HSSetters):
         for h in hists:
             yMax =    max(yMax, h.GetBinContent(h.GetMaximumBin()))
             yMinMax = min(yMinMax, h.GetBinContent(h.GetMaximumBin()))
-        if self.logY:   
-            return yMinMax/100000+1e-10, yMax*10
+        if self.logY:  
+            ymin = yMinMax/100000+1e-10
+            return ymin, yMax*10
         else:
             return 1e-2, yMax*1.5
 
@@ -399,9 +402,9 @@ class HistogramSetup(HSSetters):
         for key in lineHistograms:
             for iBin in range(lineHistograms[key].GetNbinsX()):
                 lineHistograms[key].SetBinContent(iBin+1,
-                    lineHistograms[key].GetBinContent(iBin+1)/width[iBin])
+                    lineHistograms[key].GetBinContent(iBin+1)/widths[iBin])
                 lineHistograms[key].SetBinError(iBin+1,
-                    lineHistograms[key].GetBinError(iBin+1)/width[iBin])
+                    lineHistograms[key].GetBinError(iBin+1)/widths[iBin])
 
         # divide line errors
         for key in lineErrors:
@@ -560,6 +563,8 @@ class HistogramSetup(HSSetters):
         for key in lineErrors:
             ratioErrors[key] = {}
             for syst in lineErrors[key]:
+                if not syst in self.enabledLineErrors and not self.enabledLineErrors == []:
+                    continue
                 g = lineErrors[key][syst].Clone()
                 for iBin in range(g.GetN()):
                     x = g.GetPointX(iBin)
@@ -717,6 +722,8 @@ class HistogramSetup(HSSetters):
 
             # draw errorband for lines
             for syst in errorbands:
+                if not syst in self.enabledLineErrors and not self.enabledLineErrors == []:
+                    continue
                 printer.printInfo("\tadding errorband {} on line {}".format(syst, line))
                 if not syst in lineErrors[line]:
                     printer.printWarning("\t\tno errorband for sys group {} found".format(syst))
@@ -797,7 +804,7 @@ class HistogramSetup(HSSetters):
                 else:
                     rMin = lMin
                     rMax = lMax
-        
+
             # set ratio range
             line.GetYaxis().SetRangeUser(0.5, 1.5)
 
@@ -824,14 +831,19 @@ class HistogramSetup(HSSetters):
 
             # redraw the 1-line
             line.DrawCopy("histo same")
-
+            
             # draw the lines
             if self.lineRatios:
-                for key in lineRatios:
-                    lineRatios[key].Draw("histo same")
+                # get new ymin and ymax of lines
+                yMin, yMax = self.getPlotRange([], lineRatios)
+                for line in lineRatios:
+                    self.setupHistogram(lineRatios[line], True,
+                        yMin, yMax, yTitle, xLabel, templates[line].color, doRatio)
+                    lineRatios[line].Draw("histo same")
                     if self.errorbandOnLines:
-                        for syst in ratioLineErrors[key]:
-                            ratioLineErrors[key][syst].Draw("same2")
+                        for syst in errorbands:
+                            if syst in ratioLineErrors[line]:
+                                ratioLineErrors[line][syst].Draw("same2")
 
             # redraw the data
             if useData:
@@ -892,11 +904,16 @@ class HistogramSetup(HSSetters):
 
             # draw the lines
             if self.lineRatios:
-                for key in lineRatios:
-                    lineRatios[key].Draw("histo same")
+                # get new ymin and ymax of lines
+                yMin, yMax = self.getPlotRange([], lineRatios)
+                for line in lineRatios:
+                    self.setupHistogram(lineRatios[line], True,
+                        yMin, yMax, yTitle, xLabel, templates[line].color, doRatio)
+                    lineRatios[line].Draw("histo same")
                     if self.errorbandOnLines:
-                        for syst in ratioLineErrors[key]:
-                            ratioLineErrors[key][syst].Draw("same2")
+                        for syst in errorbands:
+                            if syst in ratioLineErrors[line]:
+                                ratioLineErrors[line][syst].Draw("same2")
 
             # redraw the data
             if useData:
