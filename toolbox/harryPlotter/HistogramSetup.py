@@ -764,7 +764,7 @@ class HistogramSetup(HSSetters):
         for line in lineTemplates:
             lineLabel = templates[line].label
             if not lineTemplates[line] == 1:
-                lineLabel+= " (x {:.0f})".format(lineTemplates[line])
+                lineLabel+= " (x {:.1f})".format(lineTemplates[line])
             l.AddEntry(lineHistograms[line], lineLabel, "L")
         # add stack entries
         for idx in range(len(stackTemplates)-1, -1, -1):
