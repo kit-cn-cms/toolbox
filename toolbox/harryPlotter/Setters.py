@@ -49,6 +49,7 @@ class HSSetters:
         self.setHighestIntegralOnTop()
         self.setIncludeOnly()
         self.setPlotAsLine()
+        self.setEnabledLineErrors()
         self.setPlotInStack()
         self.setPlotAsBoth()
         self.setDontPlot()
