@@ -23,7 +23,7 @@ else:
     treeName = "Events"
 
 def ropen(rootfile):
-    f = ROOT.TFile(rootfile)
+    f = ROOT.TFile.Open(rootfile)
     tree = f.Get(treeName)
     return f, tree
 
