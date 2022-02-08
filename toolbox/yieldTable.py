@@ -102,6 +102,13 @@ def yieldTable(df, outputPath, axis = 0):
             line+= " \\\\"
             tableString.append(line)
 
+        if "soversb" in ratioNames:
+            line = stringTemplate.format("$S/(S+B)$")
+            for f in features:
+                line+=" & "+valueTemplate.format(ratios["soversb"].loc[f, "ratio"])
+            line+= " \\\\"
+            tableString.append(line)
+
         if "srootb" in ratioNames:
             line = stringTemplate.format("$S/\\sqrt{B}$")
             for f in features:
