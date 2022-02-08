@@ -125,7 +125,13 @@ class CrabResult:
             self.status_str = printblue("SUBMITTED")
         elif "Status on the CRAB server: KILLED" in self.query:
             self.status = "KILLED"
-            self.status_str = printblue("KILLED")
+            self.status_str = printred("KILLED")
+        elif "Status on the CRAB server: NEW on command SUBMIT" in self.query:
+            self.status = "NEW"
+            self.status_str = printyellow("NEW")
+        elif "Status on the CRAB server: QUEUED on command SUBMIT" in self.query:
+            self.status = "QUEUED"
+            self.status_str = printyellow("QUEUED")
         else:
             self.status = "FAILED"
             self.status_str = printred("FAILED")
