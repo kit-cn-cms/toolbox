@@ -8,6 +8,7 @@ try:
     from condorSubmit import condorSubmit
     from condorSubmit import submitToBatch
     from condorSubmit import monitorJobStatus
+    from condorSubmit import writeSubmitScript
 
     from mrcrab import crab_query
     from mrcrab import crab_report
@@ -34,6 +35,7 @@ except:
     from .condorSubmit import condorSubmit
     from .condorSubmit import submitToBatch
     from .condorSubmit import monitorJobStatus
+    from .condorSubmit import writeSubmitScript
 
     from .mrcrab import crab_query
     from .mrcrab import crab_report
