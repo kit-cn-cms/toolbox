@@ -200,15 +200,22 @@ class HistogramSetup(HSSetters):
 
         # build TAsymErrorGraphs
         stackErrors = {}
+        stackErrorsUp = {}
+        stackErrorsDown = {}
         for sys in stackResDn:
             stackErrors[sys] = ROOT.TGraphAsymmErrors(stack.Clone())
+            stackErrorsUp[sys] = stack.Clone()
+            stackErrorsDown[sys] = stack.Clone()
             for iBin in range(stack.GetNbinsX()):
                 stackErrors[sys].SetPointEYlow( iBin, stackResDn[sys][iBin])
                 stackErrors[sys].SetPointEYhigh(iBin, stackResUp[sys][iBin])
                 stackErrors[sys].SetPointEXlow( iBin, stack.GetBinWidth(iBin+1)/2.)
                 stackErrors[sys].SetPointEXhigh(iBin, stack.GetBinWidth(iBin+1)/2.)
 
-        return stackedHistograms, stackErrors
+                stackErrorsUp[sys].SetBinContent( iBin, stack.GetBinContent(iBin) + stackResUp[sys][iBin])
+                stackErrorsDown[sys].SetBinContent( iBin, stack.GetBinContent(iBin) - stackResDn[sys][iBin])
+
+        return stackedHistograms, stackErrors, stackErrorsUp, stackErrorsDown
                 
     def getStackIntegral(self, stackedHistograms):
         '''
@@ -369,6 +376,7 @@ class HistogramSetup(HSSetters):
 
     def divideBinEntries(self, 
             stackedHistograms, stackErrors, 
+            stackErrorsUp, stackErrorsDown,
             lineHistograms, lineErrors, 
             data = None):
         '''
@@ -398,6 +406,17 @@ class HistogramSetup(HSSetters):
                 stackErrors[key].SetPointEYlow(iBin, 
                     stackErrors[key].GetErrorYlow(iBin)/widths[iBin])
 
+        # divide stacked errors Up
+        for key in stackErrorsUp:
+            for iBin in range(stackErrorsUp[key].GetNbinsX()):
+                stackErrorsUp[key].SetBinContent(iBin+1, stackErrorsUp[key].GetBinContent(iBin+1)/widths[iBin])
+                stackErrorsUp[key].SetBinError(iBin+1,   stackErrorsUp[key].GetBinError(iBin+1)/widths[iBin])
+        # divide stacked errors Down
+        for key in stackErrorsDown:
+            for iBin in range(stackErrorsDown[key].GetNbinsX()):
+                stackErrorsDown[key].SetBinContent(iBin+1, stackErrorsDown[key].GetBinContent(iBin+1)/widths[iBin])
+                stackErrorsDown[key].SetBinError(iBin+1,   stackErrorsDown[key].GetBinError(iBin+1)/widths[iBin])
+
         # divide lines
         for key in lineHistograms:
             for iBin in range(lineHistograms[key].GetNbinsX()):
@@ -422,16 +441,22 @@ class HistogramSetup(HSSetters):
                 data.SetBinContent(iBin+1, data.GetBinContent(iBin+1)/widths[iBin])
                 data.SetBinError(iBin+1,   data.GetBinError(iBin+1)/widths[iBin])
         
-    def setupErrorband(self, g, syst, line = False, processColor = None):
+    def setupErrorband(self, g, syst, line = False, processColor = None, dontFill = False, lineStyle = None, width = None):
         '''
         get style in which errorband should be drawn
         '''
         ebStyle, ebColor, ebAlpha = hpUtil.getErrorStyle(syst)
-        g.SetFillStyle(ebStyle)
         if line:
             ebColor = processColor
         g.SetLineColorAlpha(ebColor, ebAlpha)
-        g.SetFillColorAlpha(ebColor, ebAlpha)
+        if not dontFill:
+            g.SetFillStyle(ebStyle)
+            g.SetFillColorAlpha(ebColor, ebAlpha)
+        if lineStyle:
+            g.SetLineStyle(lineStyle)
+        if width:
+            g.SetLineWidth(width)
+
 
     def setupDataHistogram(self, data):
         '''
@@ -626,7 +651,7 @@ class HistogramSetup(HSSetters):
         stackTemplates = self.getStackTemplatesInOrder(templates)
 
         # get list of stack histograms and also TGraphAsymErrors for uncertainties
-        stackedHistograms, stackErrors = self.stackTemplates(templates, stackTemplates)
+        stackedHistograms, stackErrors, stackErrorsUp, stackErrorsDown = self.stackTemplates(templates, stackTemplates)
 
         # get stack integral
         hasHistStack, stackIntegral = self.getStackIntegral(stackedHistograms)
@@ -662,7 +687,7 @@ class HistogramSetup(HSSetters):
         # divide by bin width if activated
         if divideByBinWidth:
             self.divideBinEntries(
-                stackedHistograms, stackErrors, lineHistograms, lineErrors, data)
+                stackedHistograms, stackErrors, stackErrorsUp, stackErrorsDown, lineHistograms, lineErrors, data)
 
         # get plotting range 
         yMin, yMax = self.getPlotRange(stackedHistograms, lineHistograms)
@@ -699,6 +724,19 @@ class HistogramSetup(HSSetters):
             stackErrors[syst].Draw("same2")
             nLegendEntries+=1
             
+        # draw systematics splittet into up and down
+        if not self.splitUpDownErrorGroups is None:
+            for syst in self.splitUpDownErrorGroups:
+                printer.printInfo("\tadding up/down errorband {} on stack".format(syst))
+                if not syst in stackErrors:
+                    printer.printWarning("\t\tno errorband for sys group {} found".format(syst))
+                    continue
+                self.setupErrorband(stackErrorsUp[syst], syst, line = False, dontFill = True, lineStyle = 1, width = 3)
+                self.setupErrorband(stackErrorsDown[syst], syst, line = False, dontFill = True, lineStyle = 2, width = 3)
+                stackErrorsUp[syst].Draw("sameHIST")
+                stackErrorsDown[syst].Draw("sameHIST")
+                nLegendEntries+=2
+
         # plot all the lines to be plot
         for line in lineTemplates:
             printer.printInfo("\tdrawing histogram line {}".format(line))
@@ -779,7 +817,14 @@ class HistogramSetup(HSSetters):
                 if syst in lineErrors[line]:
                     l.AddEntry(lineErrors[line][syst], syst, "F")
                     break
-                
+        for syst in self.splitUpDownErrorGroups:
+            if syst in stackErrorsUp:
+                l.AddEntry(stackErrorsUp[syst], syst+" Up", "l")
+                continue
+        for syst in self.splitUpDownErrorGroups:
+            if syst in stackErrorsDown:
+                l.AddEntry(stackErrorsDown[syst], syst+" Down", "l")
+                continue                
         # draw legend
         l.Draw()
             
@@ -828,6 +873,23 @@ class HistogramSetup(HSSetters):
 
                 # draw errorband
                 ratioErrors[syst].Draw("same2")
+
+            # add errorbands for up/down splitted systs
+            ratioErrorsUp = {}
+            ratioErrorsDown = {}
+            if not self.splitUpDownErrorGroups is None:
+                for syst in self.splitUpDownErrorGroups:
+                    if not syst in stackErrors:
+                        printer.printWarning("\t\tno errorband for sys group {} found".format(syst))
+                        continue
+                    # setup ratio errorband
+                    ratioErrorsUp[syst] = stackErrorsUp[syst].Clone()
+                    ratioErrorsUp[syst].Divide(stackedHistograms[-1].Clone())
+                    ratioErrorsDown[syst] = stackErrorsDown[syst].Clone()
+                    ratioErrorsDown[syst].Divide(stackedHistograms[-1].Clone())
+                    # draw errorbands
+                    ratioErrorsUp[syst].Draw("sameHIST")
+                    ratioErrorsDown[syst].Draw("sameHIST")
 
             # redraw the 1-line
             line.DrawCopy("histo same")
