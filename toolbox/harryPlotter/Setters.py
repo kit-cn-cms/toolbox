@@ -69,6 +69,7 @@ class HSSetters:
         self.setErrorbandOnLines()
         self.setScaleLineErrors()
         self.setOnlyPlotErrorGroups()
+        self.setSplitUpDownErrorGroups()
         self.setLineRatios()
 
         self.setRatio()
@@ -109,6 +110,7 @@ class HSSetters:
             printer.printInfo("\tEnabledLineErrors:     {}".format(self.enabledLineErrors))
             printer.printInfo("\tScaleLineErrors:      {}".format(self.scaleLineErrors))
             printer.printInfo("\tOnlyPlotErrorGroups:  {}".format(self.onlyPlotErrorGroups))
+            printer.printInfo("\tSplitUpDownErrorGroups:  {}".format(self.splitUpDownErrorGroups))
         printer.printInfo("\tAddRatio:             {}".format(self.ratio))
         if self.ratio:
             printer.printInfo("\tRatioLabel:           {}".format(self.ratioLabel))
@@ -204,9 +206,11 @@ class HSSetters:
     def setEnabledLineErrors(self, val = []):
         self.enabledLineErrors = val
 
-
     def setOnlyPlotErrorGroups(self, groups = None):
         self.onlyPlotErrorGroups = groups
+
+    def setSplitUpDownErrorGroups(self, groups = None):
+        self.splitUpDownErrorGroups = groups
 
     def setLineRatios(self, val = False):
         self.lineRatios = val
