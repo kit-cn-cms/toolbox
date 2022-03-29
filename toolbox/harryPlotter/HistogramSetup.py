@@ -817,14 +817,15 @@ class HistogramSetup(HSSetters):
                 if syst in lineErrors[line]:
                     l.AddEntry(lineErrors[line][syst], syst, "F")
                     break
-        for syst in self.splitUpDownErrorGroups:
-            if syst in stackErrorsUp:
-                l.AddEntry(stackErrorsUp[syst], syst+" Up", "l")
-                continue
-        for syst in self.splitUpDownErrorGroups:
-            if syst in stackErrorsDown:
-                l.AddEntry(stackErrorsDown[syst], syst+" Down", "l")
-                continue                
+        if not self.splitUpDownErrorGroups is None:
+            for syst in self.splitUpDownErrorGroups:
+                if syst in stackErrorsUp:
+                    l.AddEntry(stackErrorsUp[syst], syst+" Up", "l")
+                    continue
+            for syst in self.splitUpDownErrorGroups:
+                if syst in stackErrorsDown:
+                    l.AddEntry(stackErrorsDown[syst], syst+" Down", "l")
+                    continue                
         # draw legend
         l.Draw()
             
