@@ -16,7 +16,7 @@ from toolbox import printer
 
 class HarryPlotter(HPSetters):
     def __init__(self, plotName, inputFile, outputFile, 
-            xLabel = None, channelLabel = None, lumi = None):
+            xLabel = None, channelLabel = None, lumi = None, cutoff = None):
 
         # some settings for the output histograms
         self.plotName   = plotName
@@ -44,6 +44,9 @@ class HarryPlotter(HPSetters):
 
         # initialize name of data histogram
         self.dataName = None
+
+        # initialize cutoff for semilog histogram
+        self.cutoff = cutoff
 
     def loadFromDatacard(self):
         '''
@@ -232,6 +235,7 @@ class HarryPlotter(HPSetters):
                 self.lumi, 
                 self.divideByBinWidth,
                 outFile, 
-                self.templates)
+                self.templates,
+                self.cutoff)
 
 

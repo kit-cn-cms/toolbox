@@ -45,11 +45,21 @@ errorbandStyles = {
     "theo":         (1001, ROOT.kBlue,     0.3),
 
     "btag":         (3145, ROOT.kRed+1,    0.7),
-    "jec":          (3145, ROOT.kOrange+1, 1.0),
+    "itFit":        (3472, ROOT.kRed+1,    0.7),
+    "fixedWP":      (3145, ROOT.kRed+1,    0.7),
+    "jec":          (3245, ROOT.kOrange+1, 1.0),
     "qcdscale":     (3472, ROOT.kGray+2,   1.0),
+    "renscale":     (3472, ROOT.kGray+2,   1.0),
+    "factscale":    (3259, ROOT.kAzure+2,  1.0),
     "ps":           (3227, ROOT.kBlue+1,   1.0),
     "pu":           (3244, ROOT.kMagenta,  1.0),
-    "lep":          (3257, ROOT.kRed+1,    1.0),
+    "lep":          (3257, ROOT.kGreen+1,  1.0),
+
+    "Peterson":     (3145, ROOT.kRed+1,    0.5),    
+    "BowlerLund":   (3227, ROOT.kBlue+1,   0.5),
+    "SemiLepBR":    (3472, ROOT.kOrange+1, 0.5),
+    "BHadronPt":    (3244, ROOT.kCyan+1,   0.5),
+    "CHadronPt":    (3275, ROOT.kMagenta+1,0.5)
     }
 
 def getErrorStyle(sys):

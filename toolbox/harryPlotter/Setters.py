@@ -44,6 +44,7 @@ class HPSetters:
 class HSSetters:
     def __init__(self, nameTag = None):
         self.nameTag = nameTag
+        self.cache = []
 
         self.setPlottingOrder()
         self.setHighestIntegralOnTop()
@@ -56,6 +57,7 @@ class HSSetters:
         self.setOnlyPlot()
 
         self.setLogY()
+        self.setSemilog()
         self.setUseRealData()
         self.setPseudodataProcesses()
         self.setDataLabel()
@@ -92,6 +94,7 @@ class HSSetters:
         printer.printInfo("\tPlotAsLine:           {}".format(self.plotAsLine))
         printer.printInfo("\tPlotAsBoth:           {}".format(self.plotAsBoth))
         printer.printInfo("\tLogY:                 {}".format(self.logY))
+        printer.printInfo("\tSemilog:              {}".format(self.semilog))
         printer.printInfo("\tPlotBlind:            {}".format(self.plotBlind))
         if not self.plotBlind:
             printer.printInfo("\tUseRealData:          {}".format(self.realData))
@@ -168,6 +171,9 @@ class HSSetters:
 
     def setLogY(self, logY = False):
         self.logY = logY
+
+    def setSemilog(self, semilog = False):
+        self.semilog = semilog
 
     def setUseRealData(self, val = True):
         self.realData = val
