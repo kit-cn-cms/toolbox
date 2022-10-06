@@ -24,7 +24,10 @@ def checkFile(f, treeName = None):
         return False
 
     if debugFileCheck: print("1")
-    rf = ROOT.TFile.Open(f)
+    try:
+        rf = ROOT.TFile.Open(f)
+    except:
+        return False
     if rf is None:
         return False
 

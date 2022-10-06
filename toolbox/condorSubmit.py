@@ -136,8 +136,9 @@ def condorSubmit(submitPath):
         process.wait()
         output = process.communicate()
         try:
-            jobID = int(output[0].split(".")[0])
+            jobID = int(str(output[0]).split(".")[0])
         except:
+            return 
             print("something went wrong with calling the condir_submit command, submission of jobs was not successful")
             print("DEBUG:")
             print(output)

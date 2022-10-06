@@ -15,14 +15,7 @@ def getHistInfo(obj, name):
     print(name, nbins, low, hi)
 
 
-if sys.argv[-1].startswith("tree="):
-    rootfiles = sys.argv[1:-1]
-    treeName = sys.argv[-1].split("tree=")[1]
-else:
-    rootfiles = sys.argv[1:]
-    treeName = "Events"
-
-def ropen(rootfile):
+def ropen(rootfile, treeName):
     f = ROOT.TFile.Open(rootfile)
     tree = f.Get(treeName)
     return f, tree
@@ -66,14 +59,21 @@ def help():
     print("\tropen(ROOTFILE)    - returns TFile, MVATree")
     print("\tvars(TTree, query) - prints list of branches (if query only print matching branches)")
     
+import optparse
+parser = optparse.OptionParser()
+parser.add_option("-t", "--treeName", dest = "treeName", default = "Events",
+    help = "name of tree")
+(opts, args) = parser.parse_args()
+treeName = opts.treeName
+rootfiles = args
 
 print("="*30)
-print("loading events from tree {}".format(treeName))
+print("loading events from tree {}".format(opts.treeName))
 rfiles = []
 trees = []
 for rf in rootfiles:
     print("loading {}".format(rf))
-    f,t = ropen(rf)
+    f,t = ropen(rf, treeName)
     rfiles.append(f)
     trees.append(t)
 

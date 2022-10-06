@@ -59,7 +59,19 @@ errorbandStyles = {
     "BowlerLund":   (3227, ROOT.kBlue+1,   0.5),
     "SemiLepBR":    (3472, ROOT.kOrange+1, 0.5),
     "BHadronPt":    (3244, ROOT.kCyan+1,   0.5),
-    "CHadronPt":    (3275, ROOT.kMagenta+1,0.5)
+    "CHadronPt":    (3275, ROOT.kMagenta+1,0.5),
+
+    "ctag":         (3145, ROOT.kRed+1,    0.7),
+    "ctag_pol":     (3372, ROOT.kRed+1,    0.7),
+    "ctag_theo":    (3245, ROOT.kOrange+1, 1.0),
+    "ctag_stat":    (3172, ROOT.kGray+2,   1.0),
+    "ctag_xs":      (3257, ROOT.kGreen+1,  1.0),
+    "ctag_jec":     (3159, ROOT.kAzure+2,  1.0),
+
+    "Hadron p_{T} 5% variation": (1001, ROOT.kGray, 0.5),
+    "Peterson variation":        (3145, ROOT.kBlue, 0.5),
+    "Bowler Lund variation":     (3227, ROOT.kMagenta, 0.5),
+    "Semilep. BR variation":     (3472, ROOT.kOrange+1, 0.5),
     }
 
 def getErrorStyle(sys):

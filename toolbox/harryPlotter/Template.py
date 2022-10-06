@@ -64,6 +64,12 @@ class Template:
         t.up = {}
         t.dn = {}
 
+        allSysts = []
+        for inputTemplate in inputTemplates:
+            for syst in inputTemplate.systs:
+                if not syst in allSysts:
+                    allSysts.append(syst)
+
         # loop over input templates
         for inputTemplate in inputTemplates:
             # add nominal template
@@ -73,15 +79,27 @@ class Template:
                 t.nom.Add(inputTemplate.nom.Clone())
 
             # add systematic templates
-            for syst in inputTemplate.systs:    
-                if not syst in t.up:
-                    t.up[syst] = inputTemplate.up[syst].Clone()
+            for syst in allSysts:
+                if syst in inputTemplate.systs:    
+                    if not syst in t.up:
+                        t.up[syst] = inputTemplate.up[syst].Clone()
+                    else:
+                        t.up[syst].Add(inputTemplate.up[syst].Clone())
+                    if not syst in t.dn:
+                        t.dn[syst] = inputTemplate.dn[syst].Clone()
+                    else:
+                        t.dn[syst].Add(inputTemplate.dn[syst].Clone())
+                # add nominal contribution if systematic not defined for that process
                 else:
-                    t.up[syst].Add(inputTemplate.up[syst].Clone())
-                if not syst in t.dn:
-                    t.dn[syst] = inputTemplate.dn[syst].Clone()
-                else:
-                    t.dn[syst].Add(inputTemplate.dn[syst].Clone())
+                    if not syst in t.up:
+                        t.up[syst] = inputTemplate.nom.Clone()
+                    else:
+                        t.up[syst].Add(inputTemplate.nom.Clone())
+                    if not syst in t.dn:
+                        t.dn[syst] = inputTemplate.nom.Clone()
+                    else:
+                        t.dn[syst].Add(inputTemplate.nom.Clone())
+                    
 
             inputTemplate.partOfMerged = True
 
@@ -118,12 +136,24 @@ class Template:
             # load up and down variations
             upKeyName = hp.GetSysKeyName(self.procName, hp.channelName, syst+"Up")
             dnKeyName = hp.GetSysKeyName(self.procName, hp.channelName, syst+"Down")
+            noUp = False
+            noDown = False
             if not hp.rf.GetListOfKeys().Contains(upKeyName):
-                printer.printWarning("sys key {} does not exist".format(upKeyName))
-                self.error = True
+                noUp = True
             if not hp.rf.GetListOfKeys().Contains(dnKeyName):
-                printer.printWarning("sys key {} does not exist".format(dnKeyName))
-                self.error = True
+                noDown = True
+        
+            if noUp and noDown:
+                # check for one-sided systematic
+                sysKeyName = hp.GetSysKeyName(self.procName, hp.channelName, syst)
+                if hp.rf.GetListOfKeys().Contains(sysKeyName):
+                    printer.printInfo("one-sided systematic {}, setting down variation to nominal".format(syst))
+                    upKeyName = sysKeyName
+                    dnKeyName = nomKeyName
+                else:
+                    printer.printWarning("sys keys {} and {} dont exist".format(upKeyName, dnKeyName))
+                    self.error = True
+
             self.up[syst] = hp.rf.Get(upKeyName)
             self.dn[syst] = hp.rf.Get(dnKeyName)
         

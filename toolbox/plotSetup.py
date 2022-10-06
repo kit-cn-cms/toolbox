@@ -88,7 +88,7 @@ def getCanvas(name = "canvas",
             canvas.cd(3).SetLeftMargin(0.15+l)
             canvas.cd(3).SetTicks(1,1)
     elif twodim:
-        canvas = ROOT.TCanvas(name, name, 1024+x, 1024)
+        canvas = ROOT.TCanvas(name, name, 1024+x+w, 1024)
         canvas.SetBottomMargin(0.2)
         canvas.SetLeftMargin(0.2)
         canvas.SetTopMargin(0.2)   
