@@ -95,38 +95,46 @@ class Template:
         if not label is None:
             self.label = label
 
-    def loadTemplates(self, hp):
+    def loadTemplates(self, hp, harvester=False):
         '''
         load all the templates from the input files 
         '''
         if self.loaded: return True
-
-        # load templates from rootfile
-        nomKeyName = hp.GetNomKeyName(self.procName, hp.channelName)
-        if not hp.rf.GetListOfKeys().Contains(nomKeyName):
-            printer.printWarning("key {} does not exist".format(nomKeyName))
-            self.error = True
-            return False
-
-        self.nom = hp.rf.Get(nomKeyName)
-        print(self.nom)
-
-        # load varied templates
-        self.up = {}
-        self.dn = {}
-        for syst in self.systs:
-            # load up and down variations
-            upKeyName = hp.GetSysKeyName(self.procName, hp.channelName, syst+"Up")
-            dnKeyName = hp.GetSysKeyName(self.procName, hp.channelName, syst+"Down")
-            if not hp.rf.GetListOfKeys().Contains(upKeyName):
-                printer.printWarning("sys key {} does not exist".format(upKeyName))
+        if not harvester:
+            # load templates from rootfile
+            nomKeyName = hp.GetNomKeyName(self.procName, hp.channelName)
+            if not hp.rf.GetListOfKeys().Contains(nomKeyName):
+                printer.printWarning("key {} does not exist".format(nomKeyName))
                 self.error = True
-            if not hp.rf.GetListOfKeys().Contains(dnKeyName):
-                printer.printWarning("sys key {} does not exist".format(dnKeyName))
+                return False
+
+            self.nom = hp.rf.Get(nomKeyName)
+            print(self.nom)
+
+            # load varied templates
+            self.up = {}
+            self.dn = {}
+            for syst in self.systs:
+                # load up and down variations
+                upKeyName = hp.GetSysKeyName(self.procName, hp.channelName, syst+"Up")
+                dnKeyName = hp.GetSysKeyName(self.procName, hp.channelName, syst+"Down")
+                if not hp.rf.GetListOfKeys().Contains(upKeyName):
+                    printer.printWarning("sys key {} does not exist".format(upKeyName))
+                    self.error = True
+                if not hp.rf.GetListOfKeys().Contains(dnKeyName):
+                    printer.printWarning("sys key {} does not exist".format(dnKeyName))
+                    self.error = True
+                self.up[syst] = hp.rf.Get(upKeyName)
+                self.dn[syst] = hp.rf.Get(dnKeyName)
+        else:
+            self.up = {}
+            self.dn = {}
+            nomKeyName = hp.GetNomKeyName(self.procName, hp.channelName)
+            try:
+                self.nom = hp.rf.Get(nomKeyName).Clone()
+            except:
+                printer.printWarning("histo {} does not exist".format(nomKeyName))
                 self.error = True
-            self.up[syst] = hp.rf.Get(upKeyName)
-            self.dn[syst] = hp.rf.Get(dnKeyName)
-        
         if self.error:
             sys.exit()
         self.loaded = True

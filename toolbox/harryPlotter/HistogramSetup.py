@@ -636,7 +636,7 @@ class HistogramSetup(HSSetters):
     # =================================
 
     def drawHistogram(self, plotName, xLabel, channelLabel, lumi, 
-            divideByBinWidth, outFile, templates):
+            divideByBinWidth, outFile, templates, harvester=False):
         ''' 
         routine to setup the histograms
         get stack histograms, line histograms and data
@@ -718,7 +718,10 @@ class HistogramSetup(HSSetters):
             if not syst in stackErrors:
                 printer.printWarning("\t\tno errorband for sys group {} found".format(syst))
                 continue
-            self.setupErrorband(stackErrors[syst], syst, line = False)
+            if harvester and syst == "stat":
+                self.setupErrorband(stackErrors[syst], "syst", line = False)
+            else:
+                self.setupErrorband(stackErrors[syst], syst, line = False)
 
             # draw errorband
             stackErrors[syst].Draw("same2")
@@ -811,7 +814,10 @@ class HistogramSetup(HSSetters):
         # add uncertainty entries
         for syst in errorbands:
             if syst in stackErrors:
-                l.AddEntry(stackErrors[syst], syst, "F")
+                if harvester and syst == "stat":
+                    l.AddEntry(stackErrors[syst], "total unc.", "F")
+                else:
+                    l.AddEntry(stackErrors[syst], syst, "F")
                 continue
             for line in lineErrors:
                 if syst in lineErrors[line]:

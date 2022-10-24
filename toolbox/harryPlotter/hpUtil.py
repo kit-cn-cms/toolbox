@@ -50,7 +50,10 @@ errorbandStyles = {
     "ps":           (3227, ROOT.kBlue+1,   1.0),
     "pu":           (3244, ROOT.kMagenta,  1.0),
     "lep":          (3257, ROOT.kRed+1,    1.0),
-    }
+    "ele":          (3257, ROOT.kRed+2,    1.0), 
+    "muon":         (3257, ROOT.kRed+3,    1.0),
+    "topPt":        (3257, ROOT.kRed+4,    1.0),
+   }
 
 def getErrorStyle(sys):
     if sys in errorbandStyles:

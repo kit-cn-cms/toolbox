@@ -156,6 +156,31 @@ def printCMSLabel(pad, privateWork = True, plotLabel = "private work",
         x+=-0.07
     latex.DrawLatex(l+0.06+x,1.-t+0.01+y, text)
 
+def printCustomLabel(pad, label = "myCustomLabel", 
+        ratio = True, wideCanvas = False, pulls = False):
+    pad.cd(1)
+    l = pad.GetLeftMargin()
+    t = pad.GetTopMargin()
+    r = pad.GetRightMargin()
+    b = pad.GetBottomMargin()
+
+    latex = ROOT.TLatex()
+    latex.SetNDC()
+    latex.SetTextColor(ROOT.kBlack)
+    latex.SetTextSize(0.04)
+
+    x = 0.
+    y = 0.
+    if ratio:
+        x+=0.04
+        y+=0.03
+    if wideCanvas:
+        x+=-0.07
+    if pulls:
+        x+=0.01
+        y-=0.06
+    latex.DrawLatex(l+0.06+x,1.-t+0.01+y, label)
+
 def printLumiLabel(pad, lumi, ratio = True, sideLegend = False, wideCanvas = False):
     pad.cd(1)
     l = pad.GetLeftMargin()

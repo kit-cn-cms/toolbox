@@ -16,7 +16,7 @@ from toolbox import printer
 
 class HarryPlotter(HPSetters):
     def __init__(self, plotName, inputFile, outputFile, 
-            xLabel = None, channelLabel = None, lumi = None):
+            xLabel = None, channelLabel = None, lumi = None, harvester=False):
 
         # some settings for the output histograms
         self.plotName   = plotName
@@ -45,13 +45,16 @@ class HarryPlotter(HPSetters):
         # initialize name of data histogram
         self.dataName = None
 
+        # save if harvester is used
+        self.harvester = harvester
+
     def loadFromDatacard(self):
         '''
         Load all the information from datacard input
         '''
         pass
 
-    def loadFromSystFile(self, systFile, cloneProcesses = {}):
+    def loadFromSystFile(self, systFile, cloneProcesses = {}, skipSysts = False):
         '''
         Load all the information from a systematics csv file
         '''
@@ -95,9 +98,14 @@ class HarryPlotter(HPSetters):
         # loop over processes and build one template class per process
         for proc in self.processNames:
             printer.printInfo("\tloading templates for process {}".format(proc))
+
             systs = self.sf[~self.sf[proc].eq("-")].loc[:, ["Uncertainty", "SysGroup"]]
             systs.set_index("Uncertainty", drop = True, inplace = True)
             systs = systs.to_dict()["SysGroup"]
+            
+            if skipSysts:
+                printer.printInfo("\tclearing syst dict, since no systs were run for this plots")
+                systs = {}
 
             template = Template(
                 procName = proc,
@@ -120,11 +128,31 @@ class HarryPlotter(HPSetters):
         '''
         pass
 
-    def loadFromHarvester(self):
+    def loadFromHarvester(self, processNames):
         '''
         load all the information from combine harvester input
         '''
-        pass
+        printer.printAction(
+            "loading process and systematics information from harvester output file...",2)
+        self.rf = ROOT.TFile(self.inputFile)
+        # loop over processes and build one template class per process
+        for proc in processNames:
+            printer.printInfo("\tloading templates for process {}".format(proc))
+
+            template = Template(
+                procName = proc,
+                # systDict = systs
+                )
+            success = template.loadTemplates(self, harvester=self.harvester)
+            if success:
+                self.templates[proc] = template
+
+        if not self.dataName is None:
+            if not self.dataName in self.templates:
+                self.templates[self.dataName] = Template(
+                    procName = self.dataName,
+                    isData   = True)
+                self.templates[self.dataName].loadTemplates(self)
     
     def loadFromOptions(self):
         '''
@@ -232,6 +260,7 @@ class HarryPlotter(HPSetters):
                 self.lumi, 
                 self.divideByBinWidth,
                 outFile, 
-                self.templates)
+                self.templates,
+                self.harvester)
 
 
