@@ -56,12 +56,14 @@ class HSSetters:
         self.setOnlyPlot()
 
         self.setLogY()
+        self.setYTitle()
         self.setUseRealData()
         self.setPseudodataProcesses()
         self.setDataLabel()
         self.setPseudodataLabel()
         self.setPrivateWork()
         self.setPlotLabel()
+        self.setAdditionalLabel()
 
         self.setPlotBlind()
         self.setStatError()
@@ -93,6 +95,7 @@ class HSSetters:
         printer.printInfo("\tPlotAsLine:           {}".format(self.plotAsLine))
         printer.printInfo("\tPlotAsBoth:           {}".format(self.plotAsBoth))
         printer.printInfo("\tLogY:                 {}".format(self.logY))
+        printer.printInfo("\tyTitle:               {}".format(self.yTitle))
         printer.printInfo("\tPlotBlind:            {}".format(self.plotBlind))
         if not self.plotBlind:
             printer.printInfo("\tUseRealData:          {}".format(self.realData))
@@ -103,6 +106,7 @@ class HSSetters:
                 printer.printInfo("\tDataLabel:            {}".format(self.dataLabel))
         if self.privateWork:
             printer.printInfo("\tPlotLabel:            {}".format(self.plotLabel))
+        printer.printInfo("\tAdditionalLabel:            {}".format(self.additionalLabel))
         printer.printInfo("\tAddStatError:         {}".format(self.statError))
         printer.printInfo("\tRemoveSystErrors:     {}".format(self.removeSystErrors))
         if self.statError or not self.removeSystErrors:
@@ -171,6 +175,9 @@ class HSSetters:
     def setLogY(self, logY = False):
         self.logY = logY
 
+    def setYTitle(self, val = "Events"):
+        self.yTitle = val
+
     def setUseRealData(self, val = True):
         self.realData = val
         
@@ -188,6 +195,9 @@ class HSSetters:
 
     def setPlotLabel(self, val = "private work"):
         self.plotLabel = val
+
+    def setAdditionalLabel(self, val = None):
+        self.additionalLabel = val
 
     def setPlotBlind(self, val = False):
         self.plotBlind = val
