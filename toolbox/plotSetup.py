@@ -132,6 +132,27 @@ def printChannelLabel(pad, channelLabel, ratio = True, wideCanvas = False):
         x+=-0.06
     latex.DrawLatex(l+0.04+x,1.-t-0.08+y, channelLabel)
 
+def printAdditionalLabel(pad, additionalLabel, ratio = True, wideCanvas = False):
+    pad.cd(1)
+    l = pad.GetLeftMargin()
+    t = pad.GetTopMargin()
+    r = pad.GetRightMargin()
+    b = pad.GetBottomMargin()
+
+    latex = ROOT.TLatex()
+    latex.SetNDC()
+    latex.SetTextColor(ROOT.kBlack)
+    
+    x = 0.
+    y = 0.
+    if ratio:
+        x+= 0.05
+        y+= 0.02
+    if wideCanvas and ratio:
+        x+=-0.06
+    y -= 0.05
+    latex.DrawLatex(l+0.04+x,1.-t-0.08+y, additionalLabel)
+
 def printCMSLabel(pad, privateWork = True, plotLabel = "private work", 
         ratio = True, wideCanvas = False):
     pad.cd(1)
@@ -239,7 +260,7 @@ def getLineWithAxisSetup(plotName, nBins, yValue, yMin, yMax, xLabels, yLabel, y
         line.LabelsOption("v")
     else:
         line.LabelsOption("h")
-    line.GetXaxis().SetLabelSize(line.GetXaxis().GetLabelSize()*1.5)
+    line.GetXaxis().SetLabelSize(line.GetXaxis().GetLabelSize()*1.8)
     line.GetYaxis().SetLabelSize(line.GetYaxis().GetLabelSize()*1.2)
 
     line.GetYaxis().SetTitle(yLabel)
