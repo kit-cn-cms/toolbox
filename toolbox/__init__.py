@@ -19,6 +19,7 @@ try:
     import plotSetup
 
     from yieldTable import yieldTable
+    from pullPlotter import *
 
     from harryPlotter.harryPlotter import HarryPlotter
     from harryPlotter.HistogramSetup import HistogramSetup
@@ -46,6 +47,7 @@ except:
     from . import plotSetup
 
     from .yieldTable import yieldTable
+    from .pullPlotter import *
 
     from .harryPlotter.harryPlotter import HarryPlotter
     from .harryPlotter.HistogramSetup import HistogramSetup

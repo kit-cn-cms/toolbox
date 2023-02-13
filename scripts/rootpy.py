@@ -2,6 +2,11 @@ print("using rootpy.py")
 import ROOT
 import sys
 
+print("loading history")
+import readline
+for i in range(readline.get_current_history_length()):
+    print(readline.get_history_item(i + 1))
+
 def setStyle(obj, color = ROOT.kBlack, lw = 2):
     obj.SetLineColor(color)
     obj.SetLineWidth(lw)

@@ -134,7 +134,15 @@ class Template:
                 self.nom = hp.rf.Get(nomKeyName).Clone()
             except:
                 printer.printWarning("histo {} does not exist".format(nomKeyName))
-                self.error = True
+                if "Mphi" in self.procName and not "SR" in hp.channelName:
+                    printer.printWarning("monotop signal doesn't exist for CRs, it's fine..")
+                    printer.printWarning("\tloading dummy histogram from SR for CR")
+                    if "CR_W" in hp.channelName:
+                        self.nom = hp.rf.Get(nomKeyName.replace("CR_W", "SR")).Clone()
+                    if "CR_TT" in hp.channelName:
+                        self.nom = hp.rf.Get(nomKeyName.replace("CR_TT", "SR")).Clone()
+                else:
+                    self.error = True
         if self.error:
             sys.exit()
         self.loaded = True

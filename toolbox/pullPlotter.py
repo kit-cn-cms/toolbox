@@ -73,9 +73,13 @@ class Fit:
             for i in range(self.parameters[mode].getSize()):
                 nuis = self.parameters[mode].at(i)
                 name = nuis.GetName()
-
+                # if "pass" in name or "fail" in name:
+                    # if not "Tag" in name:
+                        # continue
+                if "SR_rate" in name:
+                    continue
                 if opts.exclude_mcstat:
-                    if "prop_bin" in name or "rate_bin" in name:
+                    if "prop_bin" in name:
                         continue
                 if not opts.unblind and (name == "r" or name.startswith("r_")):
                     continue
@@ -95,6 +99,8 @@ class Fit:
                 if name == "r" or name.startswith("r_"):
                     self.poiSet[mode].add(nuis)
                     self.poiNames[mode].append(name)
+                if abs(nuis.getVal()) > 1.5:
+                    print(name, nuis.getVal())
 
             self.nuisances[mode] = sorted(list(self.nuisances[mode]))
             self.size[mode] = len(self.nuisances[mode])

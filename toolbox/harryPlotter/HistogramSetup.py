@@ -3,6 +3,9 @@ import ROOT
 import sys
 import numpy as np
 
+from collections import OrderedDict
+from pprint import pprint
+
 from toolbox import printer
 from toolbox import plotSetup as ps
 from toolbox.harryPlotter import hpUtil
@@ -13,8 +16,10 @@ class HistogramSetup(HSSetters):
         newTemplates = {}
         for t in templates:
             if not hasattr(templates[t], "nom"):
+                print("noNominal", t)
                 continue
             if templates[t].nom.Integral() == 0:    
+                print("zeroIntegral", t)
                 continue
             newTemplates[t] = templates[t]
         return newTemplates 
@@ -73,9 +78,17 @@ class HistogramSetup(HSSetters):
             if proc in self.plotAsBoth:
                 lineTemplates[proc] = self.plotAsBoth[proc]
 
-        lineHistograms = {}
-        lineErrors = {}
-        for proc in lineTemplates:
+       
+        # append the processes predefined by plottingOrder
+        if len(self.plottingOrder) != 0:
+            orderedTemplates    = [p for p in self.plottingOrder if p in lineTemplates]
+        else:
+            orderedTemplates    = [p for p in lineTemplates]
+        print(lineTemplates)
+        lineTemplates =  OrderedDict([(key, lineTemplates[key]) for key in orderedTemplates if key in lineTemplates])
+        lineHistograms = OrderedDict()
+        lineErrors = OrderedDict()
+        for proc in orderedTemplates:
             lineHistograms[proc] = templates[proc].nom.Clone()
             scale = lineTemplates[proc]
             if scale == -1:
@@ -108,6 +121,7 @@ class HistogramSetup(HSSetters):
         lineHistograms: {procName: template}
         lineErrors:     {procName: {sysGroup: errorband}}
         '''
+        print(lineTemplates)
         return lineTemplates, lineHistograms, lineErrors
 
     def getData(self, templates):
@@ -138,6 +152,7 @@ class HistogramSetup(HSSetters):
 
             # build pseudodata histogram
             pseudodata = None
+            print(templates.keys())
             for proc in processes:
                 if pseudodata is None:
                     pseudodata = templates[proc].nom.Clone()
@@ -149,7 +164,7 @@ class HistogramSetup(HSSetters):
                 pseudodata.SetBinError(iBin+1, np.sqrt(pseudodata.GetBinContent(iBin+1)))
             return pseudodata
 
-    def stackTemplates(self, templates, stackTemplates):
+    def stackTemplates(self, templates, stackTemplates, harvester, TF=False):
         '''
         stack templates for plotting
         also load the uncertainty bands for the stack
@@ -203,17 +218,38 @@ class HistogramSetup(HSSetters):
         stackErrorsUp = {}
         stackErrorsDown = {}
         for sys in stackResDn:
-            stackErrors[sys] = ROOT.TGraphAsymmErrors(stack.Clone())
-            stackErrorsUp[sys] = stack.Clone()
-            stackErrorsDown[sys] = stack.Clone()
-            for iBin in range(stack.GetNbinsX()):
-                stackErrors[sys].SetPointEYlow( iBin, stackResDn[sys][iBin])
-                stackErrors[sys].SetPointEYhigh(iBin, stackResUp[sys][iBin])
-                stackErrors[sys].SetPointEXlow( iBin, stack.GetBinWidth(iBin+1)/2.)
-                stackErrors[sys].SetPointEXhigh(iBin, stack.GetBinWidth(iBin+1)/2.)
+            if harvester and sys =="stat" and not TF:
+                printer.printWarning("\tconstructing error band from harvester output")
+                printer.printWarning("\t\t loading stack error band from harvester TotalBkg uncertainty")
+                TotalBkg = templates["TotalBkg"].nom.Clone()
+                stackErrors[sys] = ROOT.TGraphAsymmErrors(TotalBkg)
+                stackErrorsUp[sys] = TotalBkg.Clone()
+                stackErrorsDown[sys] = TotalBkg.Clone()
+                for iBin in range(TotalBkg.GetNbinsX()):
+                    stackErrors[sys].SetPointEYlow( iBin, TotalBkg.GetBinErrorLow(iBin+1))
+                    stackErrors[sys].SetPointEYhigh(iBin, TotalBkg.GetBinErrorUp(iBin+1))
+                    stackErrors[sys].SetPointEXlow( iBin, TotalBkg.GetBinWidth(iBin+1)/2.)
+                    stackErrors[sys].SetPointEXhigh(iBin, TotalBkg.GetBinWidth(iBin+1)/2.)
 
-                stackErrorsUp[sys].SetBinContent( iBin, stack.GetBinContent(iBin) + stackResUp[sys][iBin])
-                stackErrorsDown[sys].SetBinContent( iBin, stack.GetBinContent(iBin) - stackResDn[sys][iBin])
+                    stackErrorsUp[sys].SetBinContent( iBin, TotalBkg.GetBinContent(iBin+1) + TotalBkg.GetBinErrorUp(iBin+1))
+                    stackErrorsDown[sys].SetBinContent( iBin, TotalBkg.GetBinContent(iBin+1) - TotalBkg.GetBinErrorLow(iBin+1))
+                # overwrite error of full stack (=last element of stackedHistograms list)
+                for iBin in range(stackedHistograms[-1].GetNbinsX()):
+                    stackedHistograms[-1].SetBinError(iBin+1, TotalBkg.GetBinError(iBin+1))
+
+
+            else:
+                stackErrors[sys] = ROOT.TGraphAsymmErrors(stack.Clone())
+                stackErrorsUp[sys] = stack.Clone()
+                stackErrorsDown[sys] = stack.Clone()
+                for iBin in range(stack.GetNbinsX()):
+                    stackErrors[sys].SetPointEYlow( iBin, stackResDn[sys][iBin])
+                    stackErrors[sys].SetPointEYhigh(iBin, stackResUp[sys][iBin])
+                    stackErrors[sys].SetPointEXlow( iBin, stack.GetBinWidth(iBin+1)/2.)
+                    stackErrors[sys].SetPointEXhigh(iBin, stack.GetBinWidth(iBin+1)/2.)
+
+                    stackErrorsUp[sys].SetBinContent( iBin, stack.GetBinContent(iBin) + stackResUp[sys][iBin])
+                    stackErrorsDown[sys].SetBinContent( iBin, stack.GetBinContent(iBin) - stackResDn[sys][iBin])
 
         return stackedHistograms, stackErrors, stackErrorsUp, stackErrorsDown
                 
@@ -252,7 +288,7 @@ class HistogramSetup(HSSetters):
         get info if data is used and label for data
         '''
         # determine if data is used
-        # data will not be used of there is no stack of histograms
+        # data will not be used if there is no stack of histograms
         useData = ((not self.plotBlind) and histStack)
         if self.realData and not self.dataName in templates:
             printer.printWarning(
@@ -298,7 +334,7 @@ class HistogramSetup(HSSetters):
         get title on y axis
         per default it is 'Events'
         '''
-        yTitle = "Events"
+        yTitle = self.yTitle
     
         # add info when divide by bin width was activated
         if divideByBinWidth:
@@ -326,13 +362,17 @@ class HistogramSetup(HSSetters):
             h.GetYaxis().SetTitleOffset(0.6)
         else:
             h.GetYaxis().SetTitleSize(
-                h.GetYaxis().GetTitleSize()*1.5)
+                h.GetYaxis().GetTitleSize()*1.7)
             h.GetYaxis().SetLabelSize(
-                h.GetYaxis().GetLabelSize()*1.2)
+                h.GetYaxis().GetLabelSize()*1.4)
         # edit x axis
         h.GetXaxis().SetTitle("")
         if not doRatio:
             h.GetXaxis().SetTitle(xLabel)
+            h.GetXaxis().SetTitleSize(
+                h.GetXaxis().GetTitleSize()*1.6)
+            h.GetXaxis().SetLabelSize(
+                h.GetXaxis().GetLabelSize()*1.3)
 
         # edit title an stats
         h.SetTitle("")
@@ -361,8 +401,11 @@ class HistogramSetup(HSSetters):
         else:
             # TODO find better method to automatically determine syst groups
             if hasHistStack:
-                errorbands = templates[stackTemplates[-1]].majorSystGroups
+                allErrorgroupSets = [templates[t].majorSystGroups for t in stackTemplates]
+                errorbands = set.union(*allErrorgroupSets)
+                # errorbands = templates[stackTemplates[-1]].majorSystGroups
             else:
+                print(lineTemplates.keys())
                 errorbands = templates[lineTemplates.keys()[0]].majorSystGroups
 
         if self.statError:
@@ -456,6 +499,14 @@ class HistogramSetup(HSSetters):
             g.SetLineStyle(lineStyle)
         if width:
             g.SetLineWidth(width)
+        if "TF" in g.GetName() and syst == "syst+stat":
+            drawOption = "E"
+            g.SetLineWidth(3)
+            g.SetLineColorAlpha(ebColor, 1.)
+
+        else:
+            drawOption = "E2"
+        return drawOption
 
 
     def setupDataHistogram(self, data):
@@ -497,8 +548,8 @@ class HistogramSetup(HSSetters):
             line.GetXaxis().SetLabelSize(line.GetXaxis().GetLabelSize()*3.5)
             line.GetXaxis().SetTitleSize(line.GetXaxis().GetTitleSize()*3.5)
         else:
-            line.GetXaxis().SetLabelSize(line.GetXaxis().GetLabelSize()*2.4)
-            line.GetXaxis().SetTitleSize(line.GetXaxis().GetTitleSize()*3)
+            line.GetXaxis().SetLabelSize(line.GetXaxis().GetLabelSize()*2.8)
+            line.GetXaxis().SetTitleSize(line.GetXaxis().GetTitleSize()*3.4)
         if doubleRatio and frac:
             if self.wideCanvas:
                 line.GetYaxis().SetLabelSize(line.GetYaxis().GetLabelSize()*3.5)
@@ -509,8 +560,8 @@ class HistogramSetup(HSSetters):
                 line.GetYaxis().SetTitleSize(line.GetYaxis().GetTitleSize()*2.5)
                 line.GetYaxis().SetTitleOffset(0.3)
         else:
-            line.GetYaxis().SetLabelSize(line.GetYaxis().GetLabelSize()*2.2)
-            line.GetYaxis().SetTitleSize(line.GetYaxis().GetTitleSize()*1.8)
+            line.GetYaxis().SetLabelSize(line.GetYaxis().GetLabelSize()*2.4)
+            line.GetYaxis().SetTitleSize(line.GetYaxis().GetTitleSize()*2.0)
             if self.wideCanvas:
                 line.GetYaxis().SetTitleOffset(0.3)
             else:
@@ -636,7 +687,7 @@ class HistogramSetup(HSSetters):
     # =================================
 
     def drawHistogram(self, plotName, xLabel, channelLabel, lumi, 
-            divideByBinWidth, outFile, templates, harvester=False):
+            divideByBinWidth, outFile, templates, harvester=False, TF=False):
         ''' 
         routine to setup the histograms
         get stack histograms, line histograms and data
@@ -651,7 +702,7 @@ class HistogramSetup(HSSetters):
         stackTemplates = self.getStackTemplatesInOrder(templates)
 
         # get list of stack histograms and also TGraphAsymErrors for uncertainties
-        stackedHistograms, stackErrors, stackErrorsUp, stackErrorsDown = self.stackTemplates(templates, stackTemplates)
+        stackedHistograms, stackErrors, stackErrorsUp, stackErrorsDown = self.stackTemplates(templates, stackTemplates, harvester=harvester, TF=TF)
 
         # get stack integral
         hasHistStack, stackIntegral = self.getStackIntegral(stackedHistograms)
@@ -670,13 +721,15 @@ class HistogramSetup(HSSetters):
 
         # get yTitle
         yTitle = self.getyTitle(divideByBinWidth, xLabel)
-    
+
+        self.legendOnTop = True
         # load canvas
         c = ps.getCanvas(plotName,
             log         = self.logY,
             ratio       = doRatio,
             doubleRatio = doubleRatio,
-            sideLegend  = True,
+            sideLegend  = not self.legendOnTop,
+            legendPad   = self.legendOnTop,
             wideCanvas  = self.wideCanvas
             )
 
@@ -693,7 +746,7 @@ class HistogramSetup(HSSetters):
         yMin, yMax = self.getPlotRange(stackedHistograms, lineHistograms)
 
         # plot stack histograms on canvas
-        c.cd(1)
+        c.cd(1+self.legendOnTop)
         nLegendEntries = 0
         firstPlot = True
         for idx in range(len(stackTemplates)-1, -1, -1):
@@ -719,6 +772,7 @@ class HistogramSetup(HSSetters):
                 printer.printWarning("\t\tno errorband for sys group {} found".format(syst))
                 continue
             if harvester and syst == "stat":
+                print(stackErrors[syst])
                 self.setupErrorband(stackErrors[syst], "syst", line = False)
             else:
                 self.setupErrorband(stackErrors[syst], syst, line = False)
@@ -771,11 +825,11 @@ class HistogramSetup(HSSetters):
                     continue
 
                 # setup errorband
-                self.setupErrorband(lineErrors[line][syst], 
+                drawOption = self.setupErrorband(lineErrors[line][syst], 
                     syst, line = True, processColor = templates[line].color)
 
                 # draw errorband
-                lineErrors[line][syst].Draw("same2")
+                lineErrors[line][syst].Draw("same"+drawOption)
 
         if useData:
             # setup and draw data histogram
@@ -789,15 +843,25 @@ class HistogramSetup(HSSetters):
 
         # draw grid
         if self.grid:
-            c.cd(1).SetGridx()
+            c.cd(1+self.legendOnTop).SetGridx()
         
         # setup legend
         if doRatio:
             l = ROOT.TLegend(0.81,0.93*(1.-min(1., nLegendEntries/14.)),0.98,0.93)
         else:
             l = ROOT.TLegend(0.81,0.93*(1.-min(0.85, nLegendEntries/14.)),0.98,0.93)
-            
-        l.SetBorderSize(0)
+        
+        if self.legendOnTop:
+            c.cd(1)
+            l = ROOT.TLegend(0.15,0,0.95,0.7)
+            l.SetNColumns(4)
+            if self.ratio:
+                l.SetTextSize(0.11)
+            else:
+                l.SetTextSize(0.13)
+        
+        if not self.legendOnTop:
+            l.SetBorderSize(0)
         # add data entry
         if useData:
             l.AddEntry(data, dataLabel, "P")
@@ -805,8 +869,12 @@ class HistogramSetup(HSSetters):
         for line in lineTemplates:
             lineLabel = templates[line].label
             if not lineTemplates[line] == 1:
-                lineLabel+= " (x {:.1f})".format(lineTemplates[line])
+                # lineLabel+= " (x {:.1f})".format(lineTemplates[line])
+                lineLabel = "#splitline{"+lineLabel+"}{"+"(x {:.1f})".format(lineTemplates[line])+"}"
             l.AddEntry(lineHistograms[line], lineLabel, "L")
+            # if not lineTemplates[line] == 1:
+                # l.AddEntry(lineHistograms[line], "(x {:.1f})".format(lineTemplates[line]), "")
+                # l.AddEntry(lineHistograms[line], "", "")
         # add stack entries
         for idx in range(len(stackTemplates)-1, -1, -1):
             proc = stackTemplates[idx]
@@ -821,6 +889,9 @@ class HistogramSetup(HSSetters):
                 continue
             for line in lineErrors:
                 if syst in lineErrors[line]:
+                    print(lineErrors[line][syst]).GetName()
+                    if "TF" in lineErrors[line][syst].GetName():
+                        if syst == "syst+stat": continue
                     l.AddEntry(lineErrors[line][syst], syst, "F")
                     break
         if not self.splitUpDownErrorGroups is None:
@@ -837,7 +908,7 @@ class HistogramSetup(HSSetters):
             
         # build fractional ratio
         if self.ratio and doRatio:
-            c.cd(fracIdx)
+            c.cd(fracIdx+self.legendOnTop)
     
             # get line 
             line = self.getRatioLine(stackedHistograms[-1], True,
@@ -846,6 +917,9 @@ class HistogramSetup(HSSetters):
             # get data histogram
             if useData:
                 r, rMin, rMax = self.getRatioData(data, stackedHistograms[-1], True)
+                stackedHistograms[-1].Print("range")
+                data.Print("range")
+                r.Print("range")
             # get line histograms
             if self.lineRatios:
                 lineRatios, ratioLineErrors, lMin, lMax = self.getRatioLines(
@@ -858,7 +932,8 @@ class HistogramSetup(HSSetters):
                     rMax = lMax
 
             # set ratio range
-            line.GetYaxis().SetRangeUser(0.5, 1.5)
+            # line.GetYaxis().SetRangeUser(0.5, 1.5)
+            line.GetYaxis().SetRangeUser(0., 1.99)
 
             # draw ratio line
             line.DrawCopy("histo")
@@ -918,11 +993,11 @@ class HistogramSetup(HSSetters):
             if useData:
                 r.DrawCopy("sameP")
             if self.grid:
-                c.cd(fracIdx).SetGridx()
+                c.cd(fracIdx+self.legendOnTop).SetGridx()
 
         # build fractional ratio
         if self.differenceRatio and doRatio:
-            c.cd(diffIdx)
+            c.cd(diffIdx+self.legendOnTop)
 
             # get line
             dline = self.getRatioLine(stackedHistograms[-1], False,
@@ -943,10 +1018,10 @@ class HistogramSetup(HSSetters):
                     dMax = lMax
 
             # set ratio range
-            dline.GetYaxis().SetRangeUser(
-                min(-0.25*dMax, 1.5*min(dMin,0.)), 
-                max( 0.25*dMin, 1.5*max(dMax,0.)))
-
+            # dline.GetYaxis().SetRangeUser(
+                # min(-0.25*dMax, 1.5*min(dMin,0.)), 
+                # max( 0.25*dMin, 1.5*max(dMax,0.)))
+            dline.GetYaxis().SetRangeUser(0,2.0)
             # draw ratio line
             dline.DrawCopy("histo")
 
@@ -988,20 +1063,23 @@ class HistogramSetup(HSSetters):
             if useData:
                 d.Draw("sameP")
             if self.grid:
-                c.cd(diffIdx).SetGridx()
+                c.cd(diffIdx+self.legendOnTop).SetGridx()
 
         # add some labels
         cmsLabel = ""
         if self.privateWork:
             cmsLabel = self.plotLabel
         ps.printCMSLabel(c, plotLabel = self.plotLabel, 
-            ratio = doRatio, wideCanvas = self.wideCanvas)
+            ratio = doRatio, wideCanvas = self.wideCanvas, topLegend=self.legendOnTop)
         if not lumi is None:
             ps.printLumiLabel(c, lumi = lumi, 
-                ratio = doRatio, sideLegend = True, wideCanvas = self.wideCanvas)
+                ratio = doRatio, sideLegend = True, wideCanvas = self.wideCanvas, topLegend=self.legendOnTop)
         if not channelLabel is None:
             ps.printChannelLabel(c, channelLabel, 
-                ratio = doRatio, wideCanvas = self.wideCanvas)
+                ratio = doRatio, wideCanvas = self.wideCanvas, topLegend=self.legendOnTop)
+        if not self.additionalLabel is None:
+            ps.printAdditionalLabel(c, self.additionalLabel, 
+                ratio = doRatio, wideCanvas = self.wideCanvas, topLegend=self.legendOnTop)
            
         # save output
         c.SaveAs(outFile)

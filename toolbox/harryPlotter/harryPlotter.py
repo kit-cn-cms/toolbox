@@ -16,7 +16,7 @@ from toolbox import printer
 
 class HarryPlotter(HPSetters):
     def __init__(self, plotName, inputFile, outputFile, 
-            xLabel = None, channelLabel = None, lumi = None, harvester=False):
+            xLabel = None, channelLabel = None, lumi = None, harvester=False, TF=False):
 
         # some settings for the output histograms
         self.plotName   = plotName
@@ -47,6 +47,9 @@ class HarryPlotter(HPSetters):
 
         # save if harvester is used
         self.harvester = harvester
+
+        # save if transfer factors are plotted
+        self.TF = TF
 
     def loadFromDatacard(self):
         '''
@@ -141,7 +144,7 @@ class HarryPlotter(HPSetters):
 
             template = Template(
                 procName = proc,
-                # systDict = systs
+                # systDict = systDict
                 )
             success = template.loadTemplates(self, harvester=self.harvester)
             if success:
@@ -154,6 +157,33 @@ class HarryPlotter(HPSetters):
                     isData   = True)
                 self.templates[self.dataName].loadTemplates(self)
     
+    def loadTFs(self, processNames, systDict = None):
+        '''
+        load all the information for plotting TFs
+        '''
+        self.TF = True
+        printer.printAction(
+            "loading TFs...",2)
+        self.rf = ROOT.TFile(self.inputFile)
+        # loop over processes and build one template class per process
+        for proc in processNames:
+            printer.printInfo("\tloading templates for process {}".format(proc))
+
+            template = Template(
+                procName = proc,
+                systDict = systDict[proc]
+                )
+            success = template.loadTemplates(self, harvester=False)
+            if success:
+                self.templates[proc] = template
+
+        if not self.dataName is None:
+            if not self.dataName in self.templates:
+                self.templates[self.dataName] = Template(
+                    procName = self.dataName,
+                    isData   = True)
+                self.templates[self.dataName].loadTemplates(self)
+
     def loadFromOptions(self):
         '''
         load all the information from command line options
@@ -261,6 +291,7 @@ class HarryPlotter(HPSetters):
                 self.divideByBinWidth,
                 outFile, 
                 self.templates,
-                self.harvester)
+                self.harvester,
+                self.TF)
 
 

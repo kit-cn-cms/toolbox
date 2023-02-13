@@ -53,6 +53,23 @@ errorbandStyles = {
     "ele":          (3257, ROOT.kRed+2,    1.0), 
     "muon":         (3257, ROOT.kRed+3,    1.0),
     "topPt":        (3257, ROOT.kRed+4,    1.0),
+    "TopTag":       (3145, ROOT.kRed,    1.0),
+    "TopTag1":       (3145, ROOT.kRed,    1.0),
+    "TopTag2":       (3145, ROOT.kRed+1,    1.0),
+    "TopTag3":       (3145, ROOT.kRed+2,    1.0),
+    "TopTag4":       (3145, ROOT.kRed+3,    1.0),
+    "TopTag5":       (3145, ROOT.kRed+4,    1.0),
+    "TopMisTag":     (3145, ROOT.kBlue,   1.0),
+    "passTopTag":     (3145, ROOT.kBlue,   1.0),
+    "failTopTag":     (3145, ROOT.kRed,   1.0),
+    "TopMisTag1":     (3145, ROOT.kBlue,   1.0),
+    "TopMisTag2":     (3145, ROOT.kBlue+1,   1.0),
+    "TopMisTag3":     (3145, ROOT.kBlue+2,   1.0),
+    "TopMisTag4":     (3145, ROOT.kBlue+3,   1.0),
+    "TopMisTag5":     (3145, ROOT.kBlue+4,   1.0),
+    "muR":          (3244, ROOT.kBlue+2,   1.0),
+    "muR":          (3244, ROOT.kRed+2,    1.0),
+    "this":          (3244, ROOT.kRed,    1.0),
    }
 
 def getErrorStyle(sys):
