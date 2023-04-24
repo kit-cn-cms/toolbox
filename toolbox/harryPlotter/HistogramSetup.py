@@ -54,9 +54,19 @@ class HistogramSetup(HSSetters):
             orderedTemplates.reverse()
 
         # append the processes predefined by plottingOrder
+        # plottingOrder    = [p for p in self.plottingOrder if p in stackTemplates]
+        # orderedTemplates = [p for p in orderedTemplates if not p in plottingOrder]
+        # orderedTemplates+= plottingOrder
+
+        orderedTemplates = [p for p in orderedTemplates if not p in self.plottingOrder]
         plottingOrder    = [p for p in self.plottingOrder if p in stackTemplates]
-        orderedTemplates = [p for p in orderedTemplates if not p in plottingOrder]
+        orderedTemplates.reverse()
         orderedTemplates+= plottingOrder
+        if self.highestIntegralOnTop:
+            orderedTemplates.reverse()
+        print(orderedTemplates)
+        # exit()
+
 
         # returns list of processes. first process is lowest in stack
         return orderedTemplates
@@ -338,7 +348,7 @@ class HistogramSetup(HSSetters):
     
         # add info when divide by bin width was activated
         if divideByBinWidth:
-            if xLabel.endswith("[GeV]"):
+            if xLabel.endswith("(GeV)") or xLabel.endswith("[GeV]"):
                 yTitle+= " / GeV"
             else:
                 yTitle+= " / bin width"
@@ -585,16 +595,20 @@ class HistogramSetup(HSSetters):
 
         return line 
 
-    def getRatioData(self, data, stack, frac = True):
+    def getRatioData(self, data, stack, frac = True, poissonError = True):
         '''
         get data histogram for ratio plot
         also return min and max values
         '''
         r = data.Clone()
+        denominator = stack.Clone()
         if frac:
             rMax = 1
             rMin = 1
-            r.Divide(stack.Clone())
+            if poissonError:
+                for iBin in range(denominator.GetNbinsX()):
+                    denominator.SetBinError(iBin+1, 0)
+            r.Divide(denominator.Clone())
         else:
             rMax = 0
             rMin = 0
@@ -602,7 +616,7 @@ class HistogramSetup(HSSetters):
         for iBin in range(r.GetNbinsX()):
             if not frac:
                 r.SetBinContent(iBin+1,
-                    (r.GetBinContent(iBin+1)-stack.GetBinContent(iBin+1)))
+                    (r.GetBinContent(iBin+1)-denominator.GetBinContent(iBin+1)))
             rMax = max(r.GetBinContent(iBin+1), rMax)   
             rMin = min(r.GetBinContent(iBin+1), rMin)   
 
@@ -859,6 +873,7 @@ class HistogramSetup(HSSetters):
                 l.SetTextSize(0.11)
             else:
                 l.SetTextSize(0.13)
+            # l.SetTextSize(0.2)
         
         if not self.legendOnTop:
             l.SetBorderSize(0)
@@ -917,9 +932,9 @@ class HistogramSetup(HSSetters):
             # get data histogram
             if useData:
                 r, rMin, rMax = self.getRatioData(data, stackedHistograms[-1], True)
-                stackedHistograms[-1].Print("range")
-                data.Print("range")
-                r.Print("range")
+                # stackedHistograms[-1].Print("range")
+                # data.Print("range")
+                # r.Print("range")
             # get line histograms
             if self.lineRatios:
                 lineRatios, ratioLineErrors, lMin, lMax = self.getRatioLines(
@@ -933,7 +948,7 @@ class HistogramSetup(HSSetters):
 
             # set ratio range
             # line.GetYaxis().SetRangeUser(0.5, 1.5)
-            line.GetYaxis().SetRangeUser(0., 1.99)
+            line.GetYaxis().SetRangeUser(1-self.ratioRange+0.01, 1.+self.ratioRange-0.01)
 
             # draw ratio line
             line.DrawCopy("histo")

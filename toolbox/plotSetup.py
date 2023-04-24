@@ -105,7 +105,7 @@ def getCanvas(name = "canvas",
         if not pulls:
             canvas.SetBottomMargin(0.15)
         if pulls:
-            canvas.SetBottomMargin(0.5)
+            canvas.SetBottomMargin(0.6)
         canvas.SetRightMargin(0.05+r)
         canvas.SetLeftMargin(0.15+l)
         canvas.SetTicks(1,1)
@@ -225,6 +225,8 @@ def printCMSLabel(pad, privateWork = True, plotLabel = "private work",
     else:
         latex.SetTextSize(0.04)
 
+    # DPG specific (?)
+    # text = "#bf{Private work (}CMS #bf{"+plotLabel+")}"
     text = "CMS"
     if privateWork: text += " #bf{#it{"+plotLabel+"}}"
     x = 0.

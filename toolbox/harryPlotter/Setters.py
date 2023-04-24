@@ -57,6 +57,7 @@ class HSSetters:
 
         self.setLogY()
         self.setYTitle()
+        self.setRatioRange()
         self.setUseRealData()
         self.setPseudodataProcesses()
         self.setDataLabel()
@@ -96,6 +97,7 @@ class HSSetters:
         printer.printInfo("\tPlotAsBoth:           {}".format(self.plotAsBoth))
         printer.printInfo("\tLogY:                 {}".format(self.logY))
         printer.printInfo("\tyTitle:               {}".format(self.yTitle))
+        printer.printInfo("\tratioRange            {}".format(self.ratioRange))
         printer.printInfo("\tPlotBlind:            {}".format(self.plotBlind))
         if not self.plotBlind:
             printer.printInfo("\tUseRealData:          {}".format(self.realData))
@@ -177,6 +179,9 @@ class HSSetters:
 
     def setYTitle(self, val = "Events"):
         self.yTitle = val
+
+    def setRatioRange(self, val = 0.5):
+        self.ratioRange = val
 
     def setUseRealData(self, val = True):
         self.realData = val
