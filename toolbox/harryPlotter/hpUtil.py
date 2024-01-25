@@ -44,15 +44,21 @@ errorbandStyles = {
     "experimental": (1001, ROOT.kRed,      0.3),
     "theo":         (1001, ROOT.kBlue,     0.3),
 
-    "btag":         (3145, ROOT.kRed+1,    0.7),
+    "btag":         (3145, ROOT.kRed-4,    0.7),
     "jec":          (3145, ROOT.kOrange+1, 1.0),
-    "qcdscale":     (3472, ROOT.kGray+2,   1.0),
-    "ps":           (3227, ROOT.kBlue+1,   1.0),
+    "jes":          (3145, ROOT.kOrange+3, 1.0),
+    "jer":          (3145, ROOT.kOrange+5, 1.0),
+    "uncl":         (3145, ROOT.kOrange+7, 1.0),
+    "scale":        (3472, ROOT.kBlue+1,   1.0),
+    "ps":           (3227, ROOT.kBlue+3,   1.0),
+    "lindert":      (3227, ROOT.kBlue+5,   1.0),
     "pu":           (3244, ROOT.kMagenta,  1.0),
     "lep":          (3257, ROOT.kRed+1,    1.0),
-    "ele":          (3257, ROOT.kRed+2,    1.0), 
-    "muon":         (3257, ROOT.kRed+3,    1.0),
-    "topPt":        (3257, ROOT.kRed+4,    1.0),
+    "ele":          (3257, ROOT.kRed+3,    1.0), 
+    "muon":         (3257, ROOT.kRed+4,    1.0),
+    "pho":          (3257, ROOT.kRed+2,    1.0),
+    "topPt":        (3257, ROOT.kRed+6,    1.0),
+    "toptagger":    (3257, ROOT.kGreen,    1.0),
    }
 
 def getErrorStyle(sys):

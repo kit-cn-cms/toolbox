@@ -135,8 +135,9 @@ def condorSubmit(submitPath):
         process = subprocess.Popen(submitCommand.split(), stdout = subprocess.PIPE, stderr = subprocess.STDOUT, stdin = subprocess.PIPE)
         process.wait()
         output = process.communicate()
+        print(output)
         try:
-            jobID = int(output[0].split(".")[0])
+            jobID = int(output[0].decode().split(".")[0])
         except:
             print("something went wrong with calling the condir_submit command, submission of jobs was not successful")
             print("DEBUG:")
@@ -188,7 +189,7 @@ def monitorJobStatus(jobIDs = None, queryInterval = 60, nTotalJobs = None):
         a.wait()
         qstat = a.communicate()[0]
         nrunning = 0
-        querylines = [line for line in qstat.split("\n") if "Total for query" in line]
+        querylines = [line for line in qstat.decode().split("\n") if "Total for query" in line]
 
         # check if query matches
         if len(querylines) == 0:

@@ -139,6 +139,9 @@ class HistogramSetup(HSSetters):
             # build pseudodata histogram
             pseudodata = None
             for proc in processes:
+                if not proc in templates:
+                    printer.printWarning("\tprocess {} not found in templates".format(proc))
+                    continue
                 if pseudodata is None:
                     pseudodata = templates[proc].nom.Clone()
                 else:
@@ -235,7 +238,7 @@ class HistogramSetup(HSSetters):
         '''
         yMax = 0.
         yMinMax = 1e10
-        hists = lineHistograms.values()
+        hists = list(lineHistograms.values())
         if len(stackedHistograms) > 0:
             hists.append(stackedHistograms[-1])
         for h in hists:

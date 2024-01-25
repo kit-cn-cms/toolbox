@@ -79,9 +79,9 @@ class CrabResult:
             stderr = subprocess.STDOUT, 
             stdin  = subprocess.PIPE)
 
-        process.stdin.write("\n")
+        process.stdin.write("\n".encode())
         process.wait()
-        self.query = process.communicate()[0]
+        self.query = process.communicate()[0].decode()
         if "Enter GRID pass phrase" in self.query:
             printer.printError("need to init voms proxy")
             sys.exit()
@@ -102,9 +102,9 @@ class CrabResult:
             stderr = subprocess.STDOUT, 
             stdin  = subprocess.PIPE)
 
-        process.stdin.write("\n")
+        process.stdin.write("\n".encode())
         process.wait()
-        self.query = process.communicate()[0]
+        self.query = process.communicate()[0].decode()
         if "Enter GRID pass phrase" in self.query:
             printer.printError("need to init voms proxy")
             sys.exit()

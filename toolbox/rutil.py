@@ -66,7 +66,7 @@ def checkFile(f, treeName = None):
     return True
 
 
-def hadd(files, target, entries = -1, treeName = "Events", inChunks=True, chunkSize=500):
+def hadd(files, target, entries = -1, treeName = "Events", inChunks=True, chunkSize=200):
     # check availability of all files
     ok = True
     if not treeName is None:
@@ -95,10 +95,10 @@ def hadd(files, target, entries = -1, treeName = "Events", inChunks=True, chunkS
         for i, ch in enumerate(chunks(files, chunkSize)):
             outFile = target.replace(".root","")+"_chunk_{}.root".format(i)
             hadd_parts.append(outFile)
-            cmd = "hadd -v 0 -fk {outFile} {files} ".format(files=" ".join(ch), outFile=outFile)
+            cmd = "hadd -fk {outFile} {files} ".format(files=" ".join(ch), outFile=outFile)
             execute(cmd)
         # hadd all chunks together
-        cmd = "hadd -f -v 0 {outFile} {files}".format(files =" ".join(hadd_parts), outFile = target)
+        cmd = "hadd -f {outFile} {files}".format(files =" ".join(hadd_parts), outFile = target)
         execute(cmd)
         # remove hadd parts
         cmd = "rm {files}".format(files = " ".join(hadd_parts))
