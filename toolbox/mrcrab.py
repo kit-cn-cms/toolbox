@@ -62,6 +62,10 @@ class CrabResult:
     def __init__(self, project_dir):
         self.path = project_dir
         self.name = os.path.basename(self.path)
+        # shorten name
+        self.name = self.name.replace("crab_","")
+        if len(self.name) > 50:
+            self.name = self.name[:50]
 
         if not os.path.exists(self.path):
             printer.printError("project directory {} does not exist".format(self.path))
@@ -79,9 +83,9 @@ class CrabResult:
             stderr = subprocess.STDOUT, 
             stdin  = subprocess.PIPE)
 
-        process.stdin.write("\n")
+        process.stdin.write(b"\n")
         process.wait()
-        self.query = process.communicate()[0]
+        self.query = process.communicate()[0].decode()
         if "Enter GRID pass phrase" in self.query:
             printer.printError("need to init voms proxy")
             sys.exit()
@@ -247,7 +251,7 @@ class CrabResult:
                 stderr = subprocess.STDOUT, 
                 stdin  = subprocess.PIPE)
             process.wait()
-            output = process.communicate()[0]
+            output = process.communicate()[0].decode()
 
             # resubmit result
             printer.printResult(output)
@@ -269,7 +273,7 @@ class CrabResult:
                 stderr = subprocess.STDOUT, 
                 stdin  = subprocess.PIPE)
             process.wait()
-            output = process.communicate()[0]
+            output = process.communicate()[0].decode()
 
             # resubmit result
             printer.printResult(output)

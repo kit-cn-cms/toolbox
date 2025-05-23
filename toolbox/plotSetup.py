@@ -199,20 +199,20 @@ def printCMSLabel(pad, privateWork = True, plotLabel = "private work",
     latex = ROOT.TLatex()
     latex.SetNDC()
     latex.SetTextColor(ROOT.kBlack)
-    latex.SetTextSize(0.04)
+    latex.SetTextSize(0.06)
 
     text = "CMS"
     if privateWork: text += " #bf{#it{"+plotLabel+"}}"
     x = 0.
     y = 0.
     if ratio:
-        x+=0.04
+        x+=0.05
         y+=0.03
     if wideCanvas:
         x+=-0.07
     if semilog:
         y+=-0.03
-        latex.SetTextSize(0.06)
+        latex.SetTextSize(0.08)
         if ratio:
             y+=-0.06
             x+=-0.04
@@ -228,19 +228,19 @@ def printLumiLabel(pad, lumi, ratio = True, sideLegend = False, wideCanvas = Fal
     latex = ROOT.TLatex()
     latex.SetNDC()
     latex.SetTextColor(ROOT.kBlack)
-    latex.SetTextSize(0.04)
+    latex.SetTextSize(0.06)
     text = "#bf{"+str(lumi)+" fb^{-1} (13 TeV)}"
     offset = 0.
     if sideLegend and ratio:
-        offset = 0.12
+        offset = 0.18
     elif sideLegend and not ratio:
-        offset = 0.02
+        offset = 0.10
     if wideCanvas:
         offset-= 0.05        
     if semilog:
         offset+= 0.07
         t+=0.03
-        latex.SetTextSize(0.06)
+        latex.SetTextSize(0.08)
         if ratio:
             offset+=-0.10  
             t+=0.05

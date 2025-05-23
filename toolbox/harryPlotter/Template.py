@@ -1,6 +1,7 @@
 import ROOT
 
 import sys
+import os
 import numpy as np
 from toolbox import printer
 from toolbox.harryPlotter import hpUtil
@@ -162,6 +163,89 @@ class Template:
         self.loaded = True
         return True
 
+    def loadTemplatesFromBamboo(self, hp, sampleInfo, lumiInfo):
+        if self.loaded: return True
+
+        self.openFiles = []
+        print("loading {}".format(self.procName))
+        # load all templates from rootfile
+        nomKeyName = hp.GetNomKeyName(self.procName, hp.channelName)
+        self.nom = None
+        self.up = {}
+        self.dn = {}
+        for sampleFile in sampleInfo:
+            samplePath = os.path.join(hp.inputFile, sampleFile)
+            print("adding {}".format(samplePath))
+            rf = ROOT.TFile.Open(samplePath)
+            keyList = rf.GetListOfKeys()
+            self.openFiles.append(rf)
+            fileInfo = sampleInfo[sampleFile]
+
+            scaleFactor = 1.
+            if not self.isData:
+                scaleFactor = lumiInfo[fileInfo["era"]]*fileInfo["cross-section"]/fileInfo["generated-events"]
+                #scaleFactor = sampleInfo[sampleFile]["cross-section"]/1000.
+                
+            n = rf.Get(nomKeyName)
+            nom = n.Clone()
+            nom.Scale(scaleFactor)
+            if self.nom is None:
+                self.nom = nom.Clone()
+            else:
+                self.nom.Add(nom.Clone())
+
+            for syst in self.systs:
+                upKeyName = hp.GetSysKeyName(self.procName, hp.channelName, syst+"up", clean=True)
+                dnKeyName = hp.GetSysKeyName(self.procName, hp.channelName, syst+"down", clean=True)
+                noUp = False
+                noDown = False
+                if not keyList.Contains(upKeyName):
+                    noUp = True
+                if not keyList.Contains(dnKeyName):
+                    noDown = True
+
+                if noUp and noDown:
+                    sysKeyName = hp.GetSysKeyName(self.procName, hp.channelName, syst, clean=True)
+                    if keyList.Contains(sysKeyName):
+                        #printer.printInfo("one-sided systematic {}, setting down variation to nominal".format(syst))
+                        upKeyName = sysKeyName
+                        dnKeyName = nomKeyName
+                    else:
+                        #printer.printInfo("syst {} not found, adding nominal for both directions".format(syst))
+                        upKeyName = nomKeyName
+                        dnKeyName = nomKeyName
+                
+                u = rf.Get(upKeyName)
+                up = u.Clone()
+                up.Scale(scaleFactor)
+                d = rf.Get(dnKeyName)
+                dn = d.Clone()
+                dn.Scale(scaleFactor)
+                if not syst in self.up:
+                    self.up[syst] = up.Clone()
+                else:
+                    self.up[syst].Add(up.Clone())
+                if not syst in self.dn:
+                    self.dn[syst] = dn.Clone()
+                else:
+                    self.dn[syst].Add(dn.Clone())
+                if(abs(self.up[syst].Integral()-self.nom.Integral())/self.nom.Integral()>0.25):
+                    printer.printCommand("{} has high up variation".format(syst))
+                if(abs(self.dn[syst].Integral()-self.nom.Integral())/self.nom.Integral()>0.25):
+                    printer.printCommand("{} has high down variation".format(syst))
+            
+        if self.error:
+            sys.exit()
+        self.loaded = True
+        return True
+
+    def scaleAll(self, scale):
+        self.nom.Scale(scale)
+        for syst in self.up:
+            self.up[syst].Scale(scale)
+        for syst in self.dn:
+            self.dn[syst].Scale(scale)
+
     def modifyTemplates(self, hp):
         '''
         check if overflow needs to be moved 
@@ -184,7 +268,7 @@ class Template:
                 hpUtil.divideByBinWidth(self.dn[syst])
 
 
-    def loadErrorbands(self, addStatErrorband = True, linear = False):
+    def loadErrorbands(self, addStatErrorband=True, linear=False, normalize=False):
         """
         saves all residues of the variations in dictionaries, sorted by sysGroup
         can change between linear and quadratic summation of residues
@@ -207,6 +291,10 @@ class Template:
                 self.upValues[group] = np.zeros(self.nom.GetNbinsX())
             if not group in self.dnValues:
                 self.dnValues[group] = np.zeros(self.nom.GetNbinsX())
+
+            if normalize:
+                self.up[syst].Scale( self.nom.Integral()/self.up[syst].Integral() )
+                self.dn[syst].Scale( self.nom.Integral()/self.dn[syst].Integral() )
 
             # loop over bins and get residuals
             for iBin in range(self.nom.GetNbinsX()):

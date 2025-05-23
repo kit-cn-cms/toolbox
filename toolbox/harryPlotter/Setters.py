@@ -17,8 +17,10 @@ class HPSetters:
     def SetChannelName(self, name):
         self.channelName = name
 
-    def SetDivideByBinWidth(self, val):
+    def SetDivideByBinWidth(self, val, width=None, unit=None):
         self.divideByBinWidth = val
+        self.divideValue = width
+        self.divideUnit = unit
 
     def SetMoveOverflow(self, val):
         self.moveOverflow = val
@@ -26,18 +28,26 @@ class HPSetters:
     def SetSumSystsOfProcess(self, linear):
         self.sumSystsOfProcessLinear = linear
 
+    def SetNormalizedSysts(self, norm):
+        self.normalizedSysts = norm
+
     # getters
-    def GetNomKeyName(self, proc, channel):
+    def GetNomKeyName(self, proc, channel, sample="", era=""):
         nomKey = self.nominalKey
         nomKey = nomKey.replace("$PROCESS", proc)
         nomKey = nomKey.replace("$CHANNEL", channel)
+        nomKey = nomKey.replace("$SAMPLE", sample)
+        nomKey = nomKey.replace("$ERA", era)
         return nomKey
 
-    def GetSysKeyName(self, proc, channel, sys):
+    def GetSysKeyName(self, proc, channel, sys, sample="", era="", clean=False):
         sysKey = self.systKey
         sysKey = sysKey.replace("$PROCESS", proc)
         sysKey = sysKey.replace("$CHANNEL", channel)
         sysKey = sysKey.replace("$SYSTEMATIC", sys)
+        sysKey = sysKey.replace("$SAMPLE", sample)
+        sysKey = sysKey.replace("$ERA", era)
+
         return sysKey
 
 

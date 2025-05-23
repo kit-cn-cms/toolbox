@@ -39,8 +39,10 @@ def yieldTable(df, outputPath, axis = 0):
     # features
     features = list(sorted(set(df.index.get_level_values(0))))
 
-    yieldTemplate  = "${:12.3f} \\pm {:10.3f}$"
+    yieldTemplate  = "${:12.1f} \\pm {:10.1f}$"
     valueTemplate  = "${:12.3f}$               "
+    srootsbTemplate= "${:12.3f} \\pm {:10.3f}$"
+    dataTemplate   = "${:12.0f}$               "
     stringTemplate = "{:<59}"
     headTemplate   = "{:<29}"
     midrule        = "\\midrule"
@@ -60,7 +62,7 @@ def yieldTable(df, outputPath, axis = 0):
         if "data" in ratioNames:
             line = stringTemplate.format("Data")
             for f in features:
-                line+=" & "+valueTemplate.format(ratios["data"].loc[f, "yield"])
+                line+=" & "+dataTemplate.format(ratios["data"].loc[f, "yield"])
             line+= " \\\\"
             tableString.append(line)
             tableString.append(midrule)
@@ -95,26 +97,31 @@ def yieldTable(df, outputPath, axis = 0):
             tableString.append(midrule)
 
         # SB
-        if "soverb" in ratioNames:
-            line = stringTemplate.format("$S/B$")
-            for f in features:
-                line+=" & "+valueTemplate.format(ratios["soverb"].loc[f, "ratio"])
-            line+= " \\\\"
-            tableString.append(line)
+        #if "soverb" in ratioNames:
+        #    line = stringTemplate.format("$S/B$")
+        #    for f in features:
+        #        line+=" & "+valueTemplate.format(ratios["soverb"].loc[f, "ratio"])
+        #    line+= " \\\\"
+        #    tableString.append(line)
 
         if "soversb" in ratioNames:
-            line = stringTemplate.format("$S/(S+B)$")
+            #line = stringTemplate.format("$S/(S+B)$")
+            line = stringTemplate.format("QCD fraction")
             for f in features:
-                line+=" & "+valueTemplate.format(ratios["soversb"].loc[f, "ratio"])
+                #line+=" & "+valueTemplate.format(ratios["soversb"].loc[f, "ratio"])
+                line+=" & "+srootsbTemplate.format(
+                    ratios["soversb"].loc[f, "ratio"],
+                    ratios["ssb_err"].loc[f, "ratio"]
+                )
             line+= " \\\\"
             tableString.append(line)
 
-        if "srootb" in ratioNames:
-            line = stringTemplate.format("$S/\\sqrt{B}$")
-            for f in features:
-                line+=" & "+valueTemplate.format(ratios["srootb"].loc[f, "ratio"])
-            line+= " \\\\"
-            tableString.append(line)
+        #if "srootb" in ratioNames:
+        #    line = stringTemplate.format("$S/\\sqrt{B}$")
+        #    for f in features:
+        #        line+=" & "+valueTemplate.format(ratios["srootb"].loc[f, "ratio"])
+        #    line+= " \\\\"
+        #    tableString.append(line)
                 
         tableString.append("\\end{tabular}")
 

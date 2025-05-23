@@ -11,6 +11,20 @@ import sys
 
 import toolbox.printer as printer
 
+submitTemplateT2B = """
+universe = vanilla
+executable = /bin/zsh
+arguments = {arg}
+error  = {dir}/{name}submitScript.$(Cluster)_$(ProcId).err
+log    = {dir}/{name}submitScript.$(Cluster)_$(ProcId).log
+output = {dir}/{name}submitScript.$(Cluster)_$(ProcId).out
+run_as_owner = true
+request_memory = {memory}
+request_disk = {disk}
+request_cpus = {ncores}
+JobBatchName = {batchname}
+"""
+
 submitTemplateNAF = """
 universe = vanilla
 executable = /bin/zsh
@@ -45,14 +59,18 @@ requirements = TARGET.ProvidesIO && TARGET.ProvidesEKPResources
 docker_image = mschnepf/slc7-condocker
 """
 
-def submitToBatch(workdir, list_of_shells, memory_ = "1000", disk_ = "1000000", runtime_ = "43200", ncores_ = "1", use_proxy = False, proxy_dir_ = "", name_ = ""):
+def submitToBatch(workdir, list_of_shells, 
+        memory_="1000", disk_="1000000", runtime_="43200", ncores_="1", 
+        use_proxy=False, proxy_dir_="", name_="", initial_dir=None):
     ''' submit the list of shell script to the NAF batch system '''
 
     # write array script for submission
     arrayScript = writeArrayScript(workdir, list_of_shells, name_)
 
     # write submit script for submission
-    submitScript = writeSubmitScript(workdir, arrayScript, len(list_of_shells), memory_, disk_, runtime_, ncores_, use_proxy, proxy_dir_, name_)
+    submitScript = writeSubmitScript(workdir, arrayScript, 
+        len(list_of_shells), memory_, disk_, runtime_, ncores_, 
+        use_proxy, proxy_dir_, name_, initial_dir)
         
     # submit the whole thing
     jobID = condorSubmit( submitScript)
@@ -84,7 +102,7 @@ echo "$SGE_TASK_ID"
     return path
 
 
-def writeSubmitScript(workdir, arrayScript, nScripts, memory_, disk_, runtime_, ncores_, use_proxy, proxy_dir_, name_):
+def writeSubmitScript(workdir, arrayScript, nScripts, memory_, disk_, runtime_, ncores_, use_proxy, proxy_dir_, name_, initial_dir):
     path = workdir+"/"+name_+"_submitScript.sub"
     logdir = workdir+"/logs"
     if not os.path.exists(logdir):
@@ -93,6 +111,10 @@ def writeSubmitScript(workdir, arrayScript, nScripts, memory_, disk_, runtime_, 
     code = ""
     if "naf" in os.environ["HOSTNAME"]:
         code += submitTemplateNAF
+    elif "iihe" in os.environ["HOSTNAME"]:
+        code += submitTemplateT2B
+        memory_ = str(int(memory_)/1000)+"MB"
+        disk_ = str(int(disk_)/1000)+"MB"
     else:
         code += submitTemplateETP
 
@@ -105,6 +127,9 @@ def writeSubmitScript(workdir, arrayScript, nScripts, memory_, disk_, runtime_, 
         name = name_,
         ncores = ncores_,
         batchname = name_.replace(".txt",""))
+    
+    if initial_dir:
+        code += f"\ninitialdir = {initial_dir}"
 
     if use_proxy:
         code+="""
@@ -136,7 +161,7 @@ def condorSubmit(submitPath):
         process.wait()
         output = process.communicate()
         try:
-            jobID = int(str(output[0]).split(".")[0])
+            jobID = int(str(output[0].decode()).split(".")[0])
         except:
             return 
             print("something went wrong with calling the condir_submit command, submission of jobs was not successful")
@@ -187,7 +212,7 @@ def monitorJobStatus(jobIDs = None, queryInterval = 60, nTotalJobs = None):
         a = subprocess.Popen(command, 
             stdout=subprocess.PIPE,stderr=subprocess.STDOUT,stdin=subprocess.PIPE)
         a.wait()
-        qstat = a.communicate()[0]
+        qstat = a.communicate()[0].decode()
         nrunning = 0
         querylines = [line for line in qstat.split("\n") if "Total for query" in line]
 

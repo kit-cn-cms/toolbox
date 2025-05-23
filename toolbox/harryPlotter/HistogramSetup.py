@@ -33,6 +33,7 @@ class HistogramSetup(HSSetters):
             if not self.includeOnly is None:
                 if not proc in self.includeOnly:
                     continue
+            if proc in stackTemplates: continue
             stackTemplates.append(proc)
         
         # get integral values of templates
@@ -49,9 +50,16 @@ class HistogramSetup(HSSetters):
             orderedTemplates.reverse()
 
         # append the processes predefined by plottingOrder
-        plottingOrder    = [p for p in self.plottingOrder if p in stackTemplates]
-        orderedTemplates = [p for p in orderedTemplates if not p in plottingOrder]
-        orderedTemplates+= plottingOrder
+        plottingOrder    = []
+        for p in self.plottingOrder:
+            if p in stackTemplates and not p in plottingOrder:
+                plottingOrder.append(p)
+        orderedTemplatesNew = []
+        for p in orderedTemplates:
+            if not p in plottingOrder:
+                orderedTemplatesNew.append(p)    
+        orderedTemplates = orderedTemplatesNew + plottingOrder
+        
 
         # returns list of processes. first process is lowest in stack
         return orderedTemplates
@@ -245,7 +253,7 @@ class HistogramSetup(HSSetters):
         '''
         yMax = 0.
         yMinMax = 1e10
-        hists = lineHistograms.values()
+        hists = list(lineHistograms.values())
         if len(stackedHistograms) > 0:
             hists.append(stackedHistograms[-1])
         for h in hists:
@@ -255,7 +263,8 @@ class HistogramSetup(HSSetters):
             ymin = yMinMax/1000+1e-10
             return ymin, yMax
         elif self.logY:  
-            ymin = yMinMax/100000+1e-10
+            #ymin = yMinMax/100000+1e-10 # TOP-22-009
+            ymin = yMinMax/1000+1e-10
             return ymin, yMax*10
         else:
             return 1e-2, yMax*1.5
@@ -309,7 +318,7 @@ class HistogramSetup(HSSetters):
             diffIdx+=1
         return doRatio, doubleRatio, fracIdx, diffIdx
 
-    def getyTitle(self, divideByBinWidth, xLabel):
+    def getyTitle(self, divideByBinWidth, xLabel, divideValue=None, divideUnit=None):
         '''
         get title on y axis
         per default it is 'Events'
@@ -318,10 +327,13 @@ class HistogramSetup(HSSetters):
     
         # add info when divide by bin width was activated
         if divideByBinWidth:
-            if xLabel.endswith("[GeV]"):
-                yTitle+= " / GeV"
-            else:
-                yTitle+= " / bin width"
+            yTitle+= " / "
+            if not divideValue is None:
+                yTitle+= str(divideValue)
+            if not divideUnit is None:
+                yTitle+=" {}".format(divideUnit)
+            if divideValue is None and divideUnit is None:
+                yTitle+=" bin width"
 
         return yTitle
 
@@ -348,20 +360,19 @@ class HistogramSetup(HSSetters):
             h.GetYaxis().SetTitleOffset(0.6)
         else:
             h.GetYaxis().SetTitleSize(
-                h.GetYaxis().GetTitleSize()*1.5)
+                h.GetYaxis().GetTitleSize()*1.7)
             h.GetYaxis().SetLabelSize(
-                h.GetYaxis().GetLabelSize()*1.2)
+                h.GetYaxis().GetLabelSize()*1.5)
         # edit x axis
         h.GetXaxis().SetTitle("")
         if not doRatio:
             h.GetXaxis().SetTitle(xLabel)
             
-            if self.semilog:
-                h.GetXaxis().SetTitleSize(
-                    h.GetXaxis().GetTitleSize()*2.0)
-                h.GetXaxis().SetLabelSize(
-                    h.GetXaxis().GetLabelSize()*2.0)
-                h.GetXaxis().SetTitleOffset(1.1)
+            h.GetXaxis().SetTitleSize(
+                h.GetXaxis().GetTitleSize()*1.7)
+            h.GetXaxis().SetLabelSize(
+                h.GetXaxis().GetLabelSize()*1.7)
+            h.GetXaxis().SetTitleOffset(1.1)
 
         # edit title an stats
         h.SetTitle("")
@@ -373,7 +384,10 @@ class HistogramSetup(HSSetters):
             h.SetLineColor(fillColor)
             h.SetLineWidth(2)
         else:
-            h.SetFillColor(fillColor)
+            if type(fillColor) == int:
+                h.SetFillColor(fillColor)
+            else:
+                h.SetFillColor(ROOT.TColor.GetColor(fillColor))
             h.SetLineColor(ROOT.kBlack)
             h.SetLineWidth(self.stackLineWidth)
 
@@ -406,7 +420,9 @@ class HistogramSetup(HSSetters):
     def divideBinEntries(self, 
             stackedHistograms, stackErrors, 
             lineHistograms, lineErrors, 
-            data = None, panels = [1]):
+            data=None, panels=[1],
+            divideValue=None):
+
         '''
         divide all entries by bin widths
         '''
@@ -414,10 +430,12 @@ class HistogramSetup(HSSetters):
         if len(stackedHistograms[1]) > 0:
             h = stackedHistograms[1][-1]
         elif len(lineHistograms[1].keys()) > 0:
-            h = lineHistograms[lineHistograms.keys()[0]]
+            h = lineHistograms[1][lineHistograms[1].keys()[0]]
         else:
             h = data[1]
         widths = [h.GetBinLowEdge(iBin+2)-h.GetBinLowEdge(iBin+1) for iBin in range(h.GetNbinsX())]
+        if not divideValue is None:
+            widths = [w/divideValue for w in widths]
 
         # divide stacked histograms
         for p in panels:
@@ -508,11 +526,11 @@ class HistogramSetup(HSSetters):
 
         # scale axis legends
         if self.wideCanvas:
-            line.GetXaxis().SetLabelSize(line.GetXaxis().GetLabelSize()*3.5)
-            line.GetXaxis().SetTitleSize(line.GetXaxis().GetTitleSize()*3.5)
+            line.GetXaxis().SetLabelSize(line.GetXaxis().GetLabelSize()*4.5)
+            line.GetXaxis().SetTitleSize(line.GetXaxis().GetTitleSize()*4.5)
         else:
-            line.GetXaxis().SetLabelSize(line.GetXaxis().GetLabelSize()*2.4)
-            line.GetXaxis().SetTitleSize(line.GetXaxis().GetTitleSize()*3)
+            line.GetXaxis().SetLabelSize(line.GetXaxis().GetLabelSize()*3.4)
+            line.GetXaxis().SetTitleSize(line.GetXaxis().GetTitleSize()*4)
         if doubleRatio and frac:
             if self.wideCanvas:
                 line.GetYaxis().SetLabelSize(line.GetYaxis().GetLabelSize()*3.5)
@@ -527,12 +545,12 @@ class HistogramSetup(HSSetters):
             line.GetYaxis().SetTitleSize(line.GetYaxis().GetTitleSize()*1.1)
             line.GetYaxis().SetTitleOffset(0.5)
         else:
-            line.GetYaxis().SetLabelSize(line.GetYaxis().GetLabelSize()*2.2)
-            line.GetYaxis().SetTitleSize(line.GetYaxis().GetTitleSize()*1.8)
+            line.GetYaxis().SetLabelSize(line.GetYaxis().GetLabelSize()*2.4)
+            line.GetYaxis().SetTitleSize(line.GetYaxis().GetTitleSize()*2.4)
             if self.wideCanvas:
-                line.GetYaxis().SetTitleOffset(0.3)
+                line.GetYaxis().SetTitleOffset(0.33)
             else:
-                line.GetYaxis().SetTitleOffset(0.5)
+                line.GetYaxis().SetTitleOffset(0.4)
 
         # set bin contents and errors
         line.GetYaxis().SetNdivisions(505)
@@ -654,7 +672,8 @@ class HistogramSetup(HSSetters):
     # =================================
 
     def drawHistogram(self, plotName, xLabel, channelLabel, lumi, 
-            divideByBinWidth, outFile, templates, cutoff = None):
+            divideByBinWidth, outFile, templates, cutoff=None, vLines=None,
+            divideValue=None, divideUnit=None):
         ''' 
         routine to setup the histograms
         get stack histograms, line histograms and data
@@ -666,6 +685,9 @@ class HistogramSetup(HSSetters):
             if cutoff is None: cutoff = 1e4
         else:
             panels = [1]
+
+        if not divideUnit is None:
+            xLabel += " ({})".format(divideUnit)
 
         # remove all templates with zero integral
         templates = self.removeZeroTemplates(templates)
@@ -693,7 +715,7 @@ class HistogramSetup(HSSetters):
         doRatio, doubleRatio, fracIdx, diffIdx = self.getRatioInfo(useData, lineTemplates)
 
         # get yTitle
-        yTitle = self.getyTitle(divideByBinWidth, xLabel)
+        yTitle = self.getyTitle(divideByBinWidth, xLabel, divideValue, divideUnit)
     
         # load canvas
         c = ps.getCanvas(plotName,
@@ -712,7 +734,8 @@ class HistogramSetup(HSSetters):
         # divide by bin width if activated
         if divideByBinWidth:
             self.divideBinEntries(
-                stackedHistograms, stackErrors, lineHistograms, lineErrors, data, panels)
+                stackedHistograms, stackErrors, lineHistograms, lineErrors, 
+                data, panels, divideValue)
 
         # plot stack histograms on canvas
         for panel in panels:
@@ -744,7 +767,7 @@ class HistogramSetup(HSSetters):
                     if self.semilog and panel == 2:
                         stackedHistograms[panel][idx].GetYaxis().SetTitle("")
                         stackedHistograms[panel][idx].GetYaxis().SetLabelSize(
-                            stackedHistograms[panel][idx].GetYaxis().GetLabelSize()*1.3)
+                            stackedHistograms[panel][idx].GetYaxis().GetLabelSize()*1.8)
                     stackedHistograms[panel][idx].Draw("histo")
                     firstPlot = False
                 else:
@@ -777,7 +800,7 @@ class HistogramSetup(HSSetters):
                     if self.semilog and panel == 2:
                         lineHistograms[panel][line].GetYaxis().SetTitle("")
                         lineHistograms[panel][line].GetYaxis().SetLabelSize(
-                            lineHistograms[panel][line].GetYaxis().GetLabelSize()*1.3)
+                            lineHistograms[panel][line].GetYaxis().GetLabelSize()*1.8)
                             
                     lineHistograms[panel][line].Draw("histo")
                     firstPlot = False
@@ -819,6 +842,15 @@ class HistogramSetup(HSSetters):
             # draw grid
             if self.grid:
                 c.cd(panel).SetGridx()
+
+            all_lines = []
+            if not vLines is None:
+                for x in vLines:
+                    vline = ROOT.TLine(x, yMin_, x, yMax_)
+                    vline.SetLineStyle(2)
+                    vline.SetLineWidth(1)
+                    vline.Draw("same")
+                    all_lines.append(vline)
             
             
 
@@ -868,6 +900,14 @@ class HistogramSetup(HSSetters):
             # get line 
             line = self.getRatioLine(stackedHistograms[1][-1], True,
                 dataLabel, doubleRatio, xLabel)
+            line_plus = line.Clone()
+            line_plus.Scale(1.2)
+            line_plus.SetLineStyle(2)
+            line_plus.SetLineWidth(1)
+            line_minus = line.Clone()
+            line_minus.Scale(0.8)
+            line_minus.SetLineStyle(2)
+            line_minus.SetLineWidth(1)
 
             # get data histogram
             if useData:
@@ -884,10 +924,12 @@ class HistogramSetup(HSSetters):
                     rMax = lMax
 
             # set ratio range
-            line.GetYaxis().SetRangeUser(0.5, 1.5)
+            line.GetYaxis().SetRangeUser(0.54, 1.46)
 
             # draw ratio line
             line.DrawCopy("histo")
+            line_plus.DrawCopy("histo same")
+            line_minus.DrawCopy("histo same")
 
             # draw ratio data
             if useData:

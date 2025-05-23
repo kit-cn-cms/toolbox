@@ -11,6 +11,8 @@ def chunks(l, n):
         yield l[i:i + n]
 
 def getEntries(f, treeName = "Events"):
+    if not checkFile(f, treeName):
+        raise ValueError
     rf = ROOT.TFile.Open(f, "READ")
     tree = rf.Get(treeName)
     entries = int(tree.GetEntries())

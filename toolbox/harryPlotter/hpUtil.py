@@ -39,8 +39,11 @@ def getHistColor(name):
 
 
 errorbandStyles = {
-    "stat":         (1001, ROOT.kGray,     0.4),
-    "syst":         (1001, ROOT.kBlack,    0.4),
+    "stat":         (1001, ROOT.kGray,     0.7),
+    #"Syst. + stat.":(1001, ROOT.kBlack,     0.3),
+    "Syst. + stat." :         (3145, ROOT.TColor.GetColor("#767D85"), 0.7),
+    "syst+stat" :         (3145, ROOT.TColor.GetColor("#767D85"), 0.7),
+    "syst":         (3145, ROOT.TColor.GetColor("#767D85"), 0.7),
     "experimental": (1001, ROOT.kRed,      0.3),
     "theo":         (1001, ROOT.kBlue,     0.3),
 
@@ -52,7 +55,7 @@ errorbandStyles = {
     "renscale":     (3472, ROOT.kGray+2,   1.0),
     "factscale":    (3259, ROOT.kAzure+2,  1.0),
     "ps":           (3227, ROOT.kBlue+1,   1.0),
-    "pu":           (3244, ROOT.kMagenta,  1.0),
+    "pu":           (3145, ROOT.TColor.GetColor("#45CED6"),  0.7),
     "lep":          (3257, ROOT.kGreen+1,  1.0),
 
     "Peterson":     (3145, ROOT.kRed+1,    0.5),    

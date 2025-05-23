@@ -16,7 +16,7 @@ from toolbox import printer
 
 class HarryPlotter(HPSetters):
     def __init__(self, plotName, inputFile, outputFile, 
-            xLabel = None, channelLabel = None, lumi = None, cutoff = None):
+            xLabel=None, channelLabel=None, lumi=None, cutoff=None, vLines=None):
 
         # some settings for the output histograms
         self.plotName   = plotName
@@ -47,6 +47,8 @@ class HarryPlotter(HPSetters):
 
         # initialize cutoff for semilog histogram
         self.cutoff = cutoff
+
+        self.vLines = vLines
 
     def loadFromDatacard(self):
         '''
@@ -117,10 +119,29 @@ class HarryPlotter(HPSetters):
                     isData   = True)
                 self.templates[self.dataName].loadTemplates(self)
 
+    def loadFromBambooFiles(self, groupInfo, sampleInfo, systInfo, lumiInfo):
+        '''
+        load all the information from bamboo-style root files
+        '''
+        self.processNames = []
+        for group in groupInfo:
+            procInfo = groupInfo[group]
+            self.processNames.append(group)
+            
+            # get all files which contain events from that group
+            sampleNames = {s: sampleInfo[s] for s in sampleInfo if sampleInfo[s]["group"]==group}
+
+            # define template
+            template = Template(group, systList=systInfo, isData=(group=="data"))
+            success = template.loadTemplatesFromBamboo(self, sampleNames, lumiInfo)   
+            if success: self.templates[group] = template
+
+
     def loadFromROOTFile(self):
         '''
         load all the information from a root file with the templates
         '''
+        
         pass
 
     def loadFromHarvester(self):
@@ -171,6 +192,22 @@ class HarryPlotter(HPSetters):
                 targetName))
 
 
+    def normalizeDataMC(self):
+        totalMC = 0.
+        for proc in self.templates:
+            if proc==self.dataName: continue
+            y = self.templates[proc].nom.Integral()
+            totalMC += y
+            print(proc,y)
+        dataYield = self.templates[self.dataName].nom.Integral()
+        ratio = dataYield/totalMC
+        print("total data/MC ratio: {}".format(ratio))
+        print(totalMC, dataYield)
+        for proc in self.templates:
+            if proc==self.dataName: continue
+            self.templates[proc].scaleAll(ratio)
+        
+
     def loadErrorbands(self):
         '''
         load errorbands for all templates
@@ -178,7 +215,8 @@ class HarryPlotter(HPSetters):
         printer.printAction("constructing errorbands ...",1)
         for proc in self.templates:
             self.templates[proc].loadErrorbands(
-                linear = self.sumSystsOfProcessLinear
+                linear = self.sumSystsOfProcessLinear,
+                normalize = self.normalizedSysts
                 )
                  
    
@@ -236,6 +274,10 @@ class HarryPlotter(HPSetters):
                 self.divideByBinWidth,
                 outFile, 
                 self.templates,
-                self.cutoff)
+                self.cutoff,
+                self.vLines,
+                self.divideValue,
+                self.divideUnit
+                )
 
 
