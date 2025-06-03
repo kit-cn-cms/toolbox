@@ -11,6 +11,7 @@ alias condorSubmit='python3 $TOOLBOX/scripts/condorSubmit.py'
 alias summary='python3 -m correctionlib.cli summary'
 
 alias pq='python3 -i $TOOLBOX/scripts/pq.py'
+alias pq_validate='python3 $TOOLBOX/scripts/pq.py -v'
 alias das='python3 $TOOLBOX/scripts/das.py'
 
 PYTHONPATH=$TOOLBOX:$PYTHONPATH

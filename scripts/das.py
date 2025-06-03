@@ -6,6 +6,8 @@ import os
 parser = optparse.OptionParser()
 parser.add_option("--get-parent", dest="get_parent", action="store_true", default=False)
 parser.add_option("--get-files", dest="get_files", action="store_true", default=False)
+parser.add_option("--get-meta", dest="get_meta", action="store_true", default=False)
+parser.add_option("--get-cmsdb", dest="get_cmsdb", action="store_true", default=False)
 parser.add_option("--get-xs", dest="get_xs", action="store_true", default=False)
 (opts, args) = parser.parse_args()
 
@@ -46,6 +48,51 @@ def get_xs( dataset, nf=1 ):
     xs_unit = xs_line.split(" ")[-1]
 
     return xs_val, xs_unit
+
+def get_meta( dataset ):
+    # first get datasset info and id
+    cmd = f"dasgoclient -query='dataset={dataset}' -json"
+    infos = call(cmd)
+    
+    dataset_id = infos[0]["dataset"][0].get("dataset_id", -1)
+    dataset_name = infos[0]["dataset"][0]["name"]
+    dataset_era = infos[0]["dataset"][0].get("acquisition_era_name", " ")[-1]
+    is_data = infos[0]["dataset"][0].get("datatype", "") == "data"
+    era_aux = ""
+    procs = ""
+    if is_data: 
+        era_aux = {"era": dataset_era}
+        procs = "procs.data"
+
+
+    # then get number of files
+    cmd = f"dasgoclient -query='summary dataset={dataset}' -json"
+    infos = call(cmd)
+
+    nfiles = infos[0]["summary"][0]["nfiles"]
+    nevents = infos[0]["summary"][0]["nevents"]
+
+    return {"id": dataset_id, "name": dataset_name, "nfiles": nfiles, "nevents": nevents, "is_data": is_data, "aux": era_aux, "procs": procs}
+    
+    
+def format_cmsdb( dataset ):
+    template = """
+cpn.add_dataset(
+    name="",
+    id={id},
+    is_data={is_data},
+    processes=[{procs}],
+    keys=[
+        "{name}",
+    ],
+    n_files={nfiles},
+    n_events={nevents},
+    aux={aux}
+)
+"""
+    return template.format( **get_meta(dataset) )
+
+    
     
 # loop over all arguments
 out_dict = {}
@@ -76,6 +123,10 @@ for das_string in args:
             ret = get_parent(dataset)
         elif opts.get_xs:
             ret = get_xs(dataset)
+        elif opts.get_meta:
+            ret = get_meta(dataset)
+        elif opts.get_cmsdb:
+            ret = format_cmsdb(dataset)
         else:
             # call dasgoclient command
             cmd = f"dasgoclient -query='dataset={dataset}' -json"
