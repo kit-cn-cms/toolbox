@@ -59,6 +59,7 @@ if __name__ == "__main__":
     parser = optparse.OptionParser()
     parser.add_option("-v", "--validate", dest="validate")
     parser.add_option("--del", dest="delete", action="store_true", default=False)
+    parser.add_option("--del-matching", dest="delete_match", action="store_true", default=False)
     (opts, args) = parser.parse_args()
     
     infiles = []
@@ -74,9 +75,19 @@ if __name__ == "__main__":
         for f in infiles:
             if not validate(f):
                 i += 1
-                if opts.delete:
+                if opts.delete or opts.delete_match:
                     print(f"\t--> Removing file")
                     os.remove(f)
+                    if opts.delete_match:
+                        f_name = os.path.basename(f)
+                        p_name = os.path.dirname(f)
+                        f_id = f_name.split("_")[-1].split(".")[0]
+                        f_ext = f_name.split(".")[-1]
+                        matching_files = glob.glob(os.path.join(p_name, f"*_{f_id}.{f_ext}"))
+                        for mf in matching_files:
+                            print(f"\talso {mf}")
+                            os.remove(f)
+
         print(f"\n--> {i}/{len(infiles)} broken")
                 
         

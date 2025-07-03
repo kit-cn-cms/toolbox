@@ -41,7 +41,12 @@ def get_xs( dataset, nf=1 ):
     cmd = f"cmsRun {cmssw}/src/ana.py inputFiles='{file_str}' maxEvents=-1"
     out = call(cmd, das=False, xsana=True)
 
-    xs_line = [l for l in out.split("\n") if "After filter: final cross section" in l][0]
+    try:
+        xs_line = [l for l in out.split("\n") if "After filter: final cross section" in l][0]
+    except:
+        print("Couldnt parse output:")
+        print(out)
+        exit()
     print("-->")
     print(xs_line)
     xs_val = float(xs_line.split(" = ")[1].split(" +- ")[0])
